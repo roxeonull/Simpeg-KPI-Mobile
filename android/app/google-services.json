@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "215768918879",
+    "project_id": "simpeg-kpi",
+    "storage_bucket": "simpeg-kpi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:215768918879:android:93ae5aa5d3825b4db9a4ea",
+        "android_client_info": {
+          "package_name": "com.example.simpeg_kpi_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApJkloO3wt7UoLFM1k_2caM2lqUnDKN78"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
