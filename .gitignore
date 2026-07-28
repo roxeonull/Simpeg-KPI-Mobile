@@ -14,3 +14,4 @@ ios/Flutter/Flutter.framework
 ios/Flutter/Flutter.podspec
 ios/Pods/
 ios/.symlinks/
+lib/firebase_options.dart
