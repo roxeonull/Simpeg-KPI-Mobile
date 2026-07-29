@@ -136,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   image: DecorationImage(
                     image: AssetImage('assets/images/bg-login.png'),
                     fit: BoxFit.cover,
-                    alignment: Alignment(0.0, -0.3),
+                    alignment: Alignment.topCenter,
                   ),
                 ),
               ),
@@ -150,8 +150,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppColors.redDark.withOpacity(0.55),
-                    AppColors.black.withOpacity(0.92),
+                    AppColors.redDark.withOpacity(0.45),
+                    AppColors.black.withOpacity(0.85),
                   ],
                 ),
               ),
@@ -164,10 +164,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 builder: (context, constraints) {
                   return SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight - 48,
+                        minHeight: constraints.maxHeight - 32,
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -175,28 +175,28 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           // Top Section: KPI Logo & Title
                           Column(
                             children: [
-                              const SizedBox(height: 20),
+                              SizedBox(height: constraints.maxHeight * 0.025),
                               Image.asset(
                                 'assets/images/logo-kpi.png',
-                                width: 90,
-                                height: 90,
+                                width: 80,
+                                height: 80,
                                 fit: BoxFit.contain,
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 10),
                               Text(
                                 'SIMPEG-KPI',
                                 style: GoogleFonts.plusJakartaSans(
                                   color: Colors.white,
-                                  fontSize: 22,
+                                  fontSize: 21,
                                   fontWeight: FontWeight.w800,
-                                  letterSpacing: 1.4,
+                                  letterSpacing: 1.3,
                                 ),
                               ),
-                              const SizedBox(height: 3),
+                              const SizedBox(height: 2),
                               Text(
                                 'Sistem Informasi Kepegawaian',
                                 style: GoogleFonts.plusJakartaSans(
-                                  color: Colors.white.withOpacity(0.65),
+                                  color: Colors.white.withOpacity(0.7),
                                   fontSize: 12,
                                   fontWeight: FontWeight.w400,
                                   letterSpacing: 0.3,
@@ -204,7 +204,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               ),
                             ],
                           ),
-                          const SizedBox(height: 50),
+                          // Gap pushing card lower down
+                          SizedBox(height: constraints.maxHeight * 0.08),
                           // Middle Section: Frosted Glass Login Card
                           AnimatedBuilder(
                             animation: _animationController,
@@ -221,16 +222,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               );
                             },
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(28),
+                              borderRadius: BorderRadius.circular(24),
                               child: BackdropFilter(
-                                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                                filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+                                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.09),
-                                    borderRadius: BorderRadius.circular(28),
+                                    color: Colors.white.withOpacity(0.11),
+                                    borderRadius: BorderRadius.circular(24),
                                     border: Border.all(
-                                      color: Colors.white.withOpacity(0.14),
+                                      color: Colors.white.withOpacity(0.22),
                                       width: 1.2,
                                     ),
                                   ),
@@ -243,23 +244,23 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                           'Selamat Datang',
                                           style: GoogleFonts.plusJakartaSans(
                                             color: Colors.white,
-                                            fontSize: 20,
+                                            fontSize: 19,
                                             fontWeight: FontWeight.w700,
                                             letterSpacing: 0.2,
                                           ),
                                           textAlign: TextAlign.center,
                                         ),
-                                        const SizedBox(height: 6),
+                                        const SizedBox(height: 4),
                                         Text(
                                           'Masuk untuk mengelola presensi, cuti, dan data kepegawaian Anda.',
                                           style: GoogleFonts.plusJakartaSans(
-                                            color: Colors.white.withOpacity(0.65),
-                                            fontSize: 12.5,
-                                            height: 1.5,
+                                            color: Colors.white.withOpacity(0.7),
+                                            fontSize: 12,
+                                            height: 1.4,
                                           ),
                                           textAlign: TextAlign.center,
                                         ),
-                                        const SizedBox(height: 24),
+                                        const SizedBox(height: 18),
                                         _DarkField(
                                           controller: _emailController,
                                           hint: 'Email',
@@ -271,7 +272,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                             return null;
                                           },
                                         ),
-                                        const SizedBox(height: 12),
+                                        const SizedBox(height: 10),
                                         _DarkField(
                                           controller: _passwordController,
                                           hint: 'Kata Sandi',
@@ -280,21 +281,21 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                           suffix: IconButton(
                                             icon: Icon(
                                               _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                              color: Colors.white.withOpacity(0.4),
+                                              color: Colors.white.withOpacity(0.55),
                                               size: 20,
                                             ),
                                             onPressed: () => setState(() => _obscure = !_obscure),
                                           ),
                                           validator: (v) => (v == null || v.isEmpty) ? 'Kata sandi wajib diisi' : null,
                                         ),
-                                        const SizedBox(height: 24),
+                                        const SizedBox(height: 18),
                                         ElevatedButton(
                                           onPressed: auth.isLoading ? null : _submit,
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: AppColors.red,
                                             disabledBackgroundColor: AppColors.red.withOpacity(0.5),
                                             foregroundColor: Colors.white,
-                                            padding: const EdgeInsets.symmetric(vertical: 15),
+                                            padding: const EdgeInsets.symmetric(vertical: 13.5),
                                             shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(14),
                                             ),
@@ -313,30 +314,30 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                               : Text(
                                                   'Masuk',
                                                   style: GoogleFonts.plusJakartaSans(
-                                                    fontSize: 15,
+                                                    fontSize: 14.5,
                                                     fontWeight: FontWeight.w700,
                                                     color: Colors.white,
                                                     letterSpacing: 0.6,
                                                   ),
                                                 ),
                                         ),
-                                        const SizedBox(height: 16),
+                                        const SizedBox(height: 12),
                                         Center(
                                           child: InkWell(
                                             onTap: () => _openForgotPasswordSheet(context),
                                             borderRadius: BorderRadius.circular(8),
                                             child: Padding(
-                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                               child: Text(
-                                                 'Lupa Kata Sandi?',
-                                                 style: GoogleFonts.plusJakartaSans(
-                                                   color: Colors.white.withOpacity(0.75),
-                                                   fontSize: 13,
-                                                   fontWeight: FontWeight.w600,
-                                                   decoration: TextDecoration.underline,
-                                                   decorationColor: Colors.white.withOpacity(0.5),
-                                                 ),
-                                               ),
+                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                              child: Text(
+                                                'Lupa Kata Sandi?',
+                                                style: GoogleFonts.plusJakartaSans(
+                                                  color: Colors.white.withOpacity(0.8),
+                                                  fontSize: 12.5,
+                                                  fontWeight: FontWeight.w600,
+                                                  decoration: TextDecoration.underline,
+                                                  decorationColor: Colors.white.withOpacity(0.5),
+                                                ),
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -347,20 +348,18 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               ),
                             ),
                           ),
-                          const SizedBox(height: 24),
-                          // Bottom Section: Copyright
-                          Column(
-                            children: [
-                              Text(
-                                 '© ${DateTime.now().year} Komisi Penyiaran Indonesia Pusat',
-                                style: GoogleFonts.plusJakartaSans(
-                                  color: Colors.white.withOpacity(0.35),
-                                  fontSize: 11,
-                                  letterSpacing: 0.2,
-                                ),
+                          const SizedBox(height: 16),
+                          // Bottom Section: Copyright Anchored at Bottom
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Text(
+                              '© ${DateTime.now().year} Komisi Penyiaran Indonesia Pusat',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: Colors.white.withOpacity(0.4),
+                                fontSize: 11,
+                                letterSpacing: 0.2,
                               ),
-                              const SizedBox(height: 8),
-                            ],
+                            ),
                           ),
                         ],
                       ),
@@ -560,18 +559,19 @@ class _DarkField extends StatelessWidget {
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
-      style: const TextStyle(color: Colors.white, fontSize: 14.5),
+      style: const TextStyle(color: Colors.white, fontSize: 14),
       decoration: InputDecoration(
         filled: true,
-        fillColor: Colors.black.withOpacity(0.26),
+        fillColor: Colors.black.withOpacity(0.32),
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
-        prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.4), size: 20),
+        hintStyle: TextStyle(color: Colors.white.withOpacity(0.55), fontSize: 13.5),
+        prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.55), size: 20),
         suffixIcon: suffix,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.22), width: 1.0),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -581,7 +581,7 @@ class _DarkField extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: AppColors.danger, width: 1.2),
         ),
-        errorStyle: const TextStyle(color: Color(0xFFFF8A8A), fontSize: 12),
+        errorStyle: const TextStyle(color: Color(0xFFFF8A8A), fontSize: 11.5),
       ),
     );
   }

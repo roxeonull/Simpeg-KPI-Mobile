@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/api_exception.dart';
@@ -56,6 +58,7 @@ class _FormBodyState extends State<_FormBody> {
     'golongan_darah': 'Golongan Darah',
     'agama': 'Agama',
     'hobi': 'Hobi',
+    'koordinat_domisili': 'Koordinat Titik Domisili WFH',
   };
 
   final _maritalOptions = const ['Belum Kawin', 'Kawin', 'Cerai Hidup', 'Cerai Mati'];
@@ -71,6 +74,7 @@ class _FormBodyState extends State<_FormBody> {
   late final String _origGolonganDarah;
   late final String _origAgama;
   late final String _origHobi;
+  late final String _origKoordinatDomisili;
 
   // Controllers / States for editable fields:
   late final TextEditingController _noHpController;
@@ -81,6 +85,8 @@ class _FormBodyState extends State<_FormBody> {
   String? _golonganDarah;
   String? _agama;
   late final TextEditingController _hobiController;
+  late final TextEditingController _koordinatDomisiliController;
+  bool _isFetchingGps = false;
 
   @override
   void initState() {
@@ -94,6 +100,7 @@ class _FormBodyState extends State<_FormBody> {
     _origGolonganDarah = d.golonganDarah ?? '';
     _origAgama = d.agama ?? '';
     _origHobi = d.hobi ?? '';
+    _origKoordinatDomisili = d.koordinatDomisili ?? '';
 
     _noHpController = TextEditingController(text: _origNoHp);
     _emailPribadiController = TextEditingController(text: _origEmailPribadi);
@@ -103,6 +110,7 @@ class _FormBodyState extends State<_FormBody> {
     _golonganDarah = _origGolonganDarah.isEmpty ? null : _origGolonganDarah;
     _agama = _origAgama.isEmpty ? null : _origAgama;
     _hobiController = TextEditingController(text: _origHobi);
+    _koordinatDomisiliController = TextEditingController(text: _origKoordinatDomisili);
 
     // Listeners to rebuild and highlight changes:
     _noHpController.addListener(_onFieldChanged);
@@ -110,10 +118,66 @@ class _FormBodyState extends State<_FormBody> {
     _alamatController.addListener(_onFieldChanged);
     _namaPanggilanController.addListener(_onFieldChanged);
     _hobiController.addListener(_onFieldChanged);
+    _koordinatDomisiliController.addListener(_onFieldChanged);
   }
 
   void _onFieldChanged() {
     setState(() {});
+  }
+
+  Future<void> _getCurrentGpsForDomisili() async {
+    setState(() => _isFetchingGps = true);
+    try {
+      LocationPermission perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied) {
+        perm = await Geolocator.requestPermission();
+      }
+      if (perm == LocationPermission.deniedForever || perm == LocationPermission.denied) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Izin lokasi (GPS) ditolak. Silakan ketik koordinat secara manual.', style: GoogleFonts.plusJakartaSans(fontSize: 13)),
+              backgroundColor: AppColors.danger,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      );
+      final coordsText = "${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}";
+      setState(() {
+        _koordinatDomisiliController.text = coordsText;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Koordinat domisili berhasil diambil dari GPS HP: $coordsText', style: GoogleFonts.plusJakartaSans(fontSize: 13)),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal mengambil lokasi GPS: $e', style: GoogleFonts.plusJakartaSans(fontSize: 13)),
+            backgroundColor: AppColors.danger,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isFetchingGps = false);
+    }
   }
 
   @override
@@ -123,38 +187,91 @@ class _FormBodyState extends State<_FormBody> {
     _alamatController.dispose();
     _namaPanggilanController.dispose();
     _hobiController.dispose();
+    _koordinatDomisiliController.dispose();
     super.dispose();
   }
 
   bool _hasChanges() {
-    return _noHpController.text.trim() != _origNoHp ||
-        _emailPribadiController.text.trim() != _origEmailPribadi ||
-        _alamatController.text.trim() != _origAlamat ||
-        _namaPanggilanController.text.trim() != _origNamaPanggilan ||
-        (_statusMarital ?? '') != _origStatusMarital ||
-        (_golonganDarah ?? '') != _origGolonganDarah ||
-        (_agama ?? '') != _origAgama ||
-        _hobiController.text.trim() != _origHobi;
+    return _countChanges() > 0;
+  }
+
+  int _countChanges() {
+    int count = 0;
+    if (_noHpController.text.trim() != _origNoHp) count++;
+    if (_emailPribadiController.text.trim() != _origEmailPribadi) count++;
+    if (_alamatController.text.trim() != _origAlamat) count++;
+    if (_namaPanggilanController.text.trim() != _origNamaPanggilan) count++;
+    if ((_statusMarital ?? '') != _origStatusMarital) count++;
+    if ((_golonganDarah ?? '') != _origGolonganDarah) count++;
+    if ((_agama ?? '') != _origAgama) count++;
+    if (_hobiController.text.trim() != _origHobi) count++;
+    if (_koordinatDomisiliController.text.trim() != _origKoordinatDomisili) count++;
+    return count;
+  }
+
+  Widget _buildChangeSummaryBanner(int count) {
+    if (count == 0) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFF59E0B), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF59E0B).withOpacity(0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF59E0B),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.edit_note_rounded, color: Colors.white, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              '$count Perubahan Data Terdeteksi — Siap Dikirim ke Admin',
+              style: GoogleFonts.plusJakartaSans(
+                color: const Color(0xFF92400E),
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   InputDecoration _getInputDecoration(String label, String originalValue, String currentValue) {
     final isChanged = originalValue != currentValue;
     return InputDecoration(
       labelText: label,
-      labelStyle: TextStyle(
-        color: isChanged ? AppColors.gold : AppColors.gray,
-        fontWeight: isChanged ? FontWeight.bold : FontWeight.normal,
+      labelStyle: GoogleFonts.plusJakartaSans(
+        color: isChanged ? const Color(0xFFD97706) : const Color(0xFF64748B),
+        fontWeight: isChanged ? FontWeight.w700 : FontWeight.w500,
+        fontSize: 13.5,
       ),
       enabledBorder: OutlineInputBorder(
         borderSide: BorderSide(
-          color: isChanged ? AppColors.gold : AppColors.border,
+          color: isChanged ? const Color(0xFFF59E0B) : AppColors.border,
           width: isChanged ? 1.8 : 1.0,
         ),
         borderRadius: BorderRadius.circular(12),
       ),
       focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(
-          color: isChanged ? AppColors.gold : AppColors.red,
+          color: isChanged ? const Color(0xFFF59E0B) : AppColors.red,
           width: 1.8,
         ),
         borderRadius: BorderRadius.circular(12),
@@ -169,9 +286,10 @@ class _FormBodyState extends State<_FormBody> {
         TextFormField(
           initialValue: (value == null || value.isEmpty) ? '—' : value,
           enabled: false,
+          style: GoogleFonts.plusJakartaSans(color: const Color(0xFF64748B), fontSize: 13.5),
           decoration: InputDecoration(
             labelText: label,
-            labelStyle: const TextStyle(color: AppColors.grayLight),
+            labelStyle: GoogleFonts.plusJakartaSans(color: AppColors.grayLight, fontSize: 13.5),
             disabledBorder: OutlineInputBorder(
               borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
               borderRadius: BorderRadius.circular(12),
@@ -179,14 +297,13 @@ class _FormBodyState extends State<_FormBody> {
             fillColor: AppColors.border.withOpacity(0.15),
             filled: true,
           ),
-          style: const TextStyle(color: AppColors.gray),
         ),
         const SizedBox(height: 4),
-        const Padding(
-          padding: EdgeInsets.only(left: 4),
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
           child: Text(
             'Hubungi Admin untuk mengubah data ini',
-            style: TextStyle(fontSize: 10, color: AppColors.grayLight, fontStyle: FontStyle.italic),
+            style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: AppColors.grayLight, fontStyle: FontStyle.italic),
           ),
         ),
       ],
@@ -230,6 +347,9 @@ class _FormBodyState extends State<_FormBody> {
     }
     if (_hobiController.text.trim() != _origHobi) {
       changes['hobi'] = _hobiController.text.trim();
+    }
+    if (_koordinatDomisiliController.text.trim() != _origKoordinatDomisili) {
+      changes['koordinat_domisili'] = _koordinatDomisiliController.text.trim();
     }
 
     if (changes.isEmpty) {
@@ -357,6 +477,7 @@ class _FormBodyState extends State<_FormBody> {
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
                 child: Column(
                   children: [
+                    _buildChangeSummaryBanner(_countChanges()),
                     FadeSlideIn(
                       child: _SectionCard(
                         title: 'Identitas Pribadi',
@@ -472,6 +593,38 @@ class _FormBodyState extends State<_FormBody> {
                               }
                               return null;
                             },
+                          ),
+
+                          // koordinat_domisili (Editable text / manual type + GPS button)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              TextFormField(
+                                controller: _koordinatDomisiliController,
+                                style: GoogleFonts.plusJakartaSans(fontSize: 13.5),
+                                decoration: _getInputDecoration('Koordinat Titik Domisili WFH (Lat, Lng)', _origKoordinatDomisili, _koordinatDomisiliController.text.trim()).copyWith(
+                                  hintText: 'Contoh: -6.2088, 106.8456',
+                                  helperText: 'Bisa diketik manual atau tekan tombol GPS di bawah',
+                                  helperStyle: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.gray),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              OutlinedButton.icon(
+                                onPressed: _isFetchingGps ? null : _getCurrentGpsForDomisili,
+                                icon: _isFetchingGps
+                                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.red))
+                                    : const Icon(Icons.my_location_rounded, size: 18, color: AppColors.red),
+                                label: Text(
+                                  _isFetchingGps ? 'Mengambil GPS HP...' : 'Ambil Koordinat Rumah Saat Ini (GPS)',
+                                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 12.5, color: AppColors.red),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  side: const BorderSide(color: AppColors.redSoft, width: 1.5),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                              ),
+                            ],
                           ),
 
                           _buildReadOnlyField('Kelurahan', d.kelurahan),
@@ -624,15 +777,28 @@ class _FormBodyState extends State<_FormBody> {
           decoration: const BoxDecoration(
             color: Colors.white,
             border: Border(top: BorderSide(color: AppColors.border)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 10,
+                offset: Offset(0, -3),
+              ),
+            ],
           ),
           child: ElevatedButton(
             onPressed: (hasChanges && !_isSubmitting) ? _submit : null,
             style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.red,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: AppColors.grayLight.withOpacity(0.3),
+              disabledForegroundColor: AppColors.gray,
               padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              elevation: 0,
             ),
             child: Text(
-              hasChanges ? 'Kirim Pengajuan' : 'Tidak ada perubahan untuk dikirim',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              hasChanges ? 'Kirim (${_countChanges()}) Pengajuan Perubahan Data' : 'Tidak Ada Perubahan Untuk Dikirim',
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14),
             ),
           ),
         ),

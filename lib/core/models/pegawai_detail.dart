@@ -25,6 +25,9 @@ class PegawaiDetail {
   final String? kota;
   final String? provinsi;
   final String? kodePos;
+  final String? koordinatDomisili;
+  final double? latDomisili;
+  final double? lngDomisili;
 
   // Kepegawaian
   final String nip;
@@ -105,6 +108,9 @@ class PegawaiDetail {
     this.kota,
     this.provinsi,
     this.kodePos,
+    this.koordinatDomisili,
+    this.latDomisili,
+    this.lngDomisili,
     required this.nip,
     this.tipePegawai,
     required this.statusKepegawaian,
@@ -180,6 +186,9 @@ class PegawaiDetail {
         kota: json['kota'],
         provinsi: json['provinsi'],
         kodePos: json['kode_pos'],
+        koordinatDomisili: json['koordinat_domisili'] ?? (json['lat_domisili'] != null && json['lng_domisili'] != null ? "${json['lat_domisili']}, ${json['lng_domisili']}" : null),
+        latDomisili: json['lat_domisili'] != null ? double.tryParse(json['lat_domisili'].toString()) : null,
+        lngDomisili: json['lng_domisili'] != null ? double.tryParse(json['lng_domisili'].toString()) : null,
         nip: json['nip'],
         tipePegawai: json['tipe_pegawai'],
         statusKepegawaian: json['status_kepegawaian'],

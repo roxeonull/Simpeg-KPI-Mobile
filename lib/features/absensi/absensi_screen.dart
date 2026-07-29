@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/models/absensi.dart';
@@ -191,19 +192,44 @@ class _PresensiCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(Formatters.hariTanggal(DateTime.now()), style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12.5)),
-              if (shift != null && !shift.isLibur)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '${shift.shiftLabel} · ${shift.jamMulai}-${shift.jamSelesai}' + (shift.stasiunTv != null ? ' · ${shift.stasiunTv}' : ''),
-                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
-                  ),
+              Text(
+                Formatters.hariTanggal(DateTime.now()),
+                style: GoogleFonts.plusJakartaSans(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
                 ),
+              ),
+              Row(
+                children: [
+                  if (DateTime.now().weekday == DateTime.friday) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF59E0B),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '🏡 WFH Jumat (Domisili)',
+                        style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  if (shift != null && !shift.isLibur)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.18),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${shift.shiftLabel} · ${shift.jamMulai}-${shift.jamSelesai}' + (shift.stasiunTv != null ? ' · ${shift.stasiunTv}' : ''),
+                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 6),
@@ -352,40 +378,82 @@ class _HistoryTile extends StatelessWidget {
   (Color, Color, IconData) _statusStyle() {
     switch (absensi.status) {
       case 'hadir':
-        return (AppColors.successSoft, AppColors.success, Icons.check_rounded);
+        return (AppColors.successSoft, AppColors.success, Icons.check_circle_outline_rounded);
       case 'telat':
         return (AppColors.warningSoft, AppColors.warning, Icons.schedule_rounded);
       case 'izin':
       case 'sakit':
         return (AppColors.infoSoft, AppColors.info, Icons.info_outline_rounded);
       default:
-        return (AppColors.dangerSoft, AppColors.danger, Icons.close_rounded);
+        return (AppColors.dangerSoft, AppColors.danger, Icons.cancel_outlined);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final (bg, fg, icon) = _statusStyle();
+    final jamMasuk = absensi.jamMasuk != null && absensi.jamMasuk!.length >= 5 ? absensi.jamMasuk!.substring(0, 5) : '--:--';
+    final jamKeluar = absensi.jamKeluar != null && absensi.jamKeluar!.length >= 5 ? absensi.jamKeluar!.substring(0, 5) : '--:--';
+
     return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, color: fg, size: 18),
+            child: Icon(icon, color: fg, size: 20),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(Formatters.tanggalPendek(absensi.tanggal), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
-                const SizedBox(height: 2),
                 Text(
-                  '${absensi.jamMasuk?.substring(0, 5) ?? '--:--'} - ${absensi.jamKeluar?.substring(0, 5) ?? '--:--'}',
-                  style: const TextStyle(color: AppColors.gray, fontSize: 12),
+                  Formatters.tanggalPendek(absensi.tanggal),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: AppColors.black,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.south_west_rounded, color: AppColors.success, size: 12),
+                    const SizedBox(width: 3),
+                    Text(
+                      jamMasuk,
+                      style: GoogleFonts.plusJakartaSans(
+                        color: const Color(0xFF475569),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Icon(Icons.north_east_rounded, color: AppColors.danger, size: 12),
+                    const SizedBox(width: 3),
+                    Text(
+                      jamKeluar,
+                      style: GoogleFonts.plusJakartaSans(
+                        color: const Color(0xFF475569),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

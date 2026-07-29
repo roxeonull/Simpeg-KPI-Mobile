@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 
 class FilterChipsRow extends StatelessWidget {
@@ -18,7 +19,7 @@ class FilterChipsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 40,
+      height: 36,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: options.length,
@@ -32,13 +33,25 @@ class FilterChipsRow extends StatelessWidget {
           return GestureDetector(
             onTap: () => onSelected(key),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
                 color: isSelected ? AppColors.red : Colors.white,
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: isSelected ? AppColors.red : AppColors.border),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected ? AppColors.red : AppColors.border,
+                  width: 1.0,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.red.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                    : null,
               ),
               alignment: Alignment.center,
               child: Row(
@@ -46,24 +59,24 @@ class FilterChipsRow extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : AppColors.black,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                    style: GoogleFonts.plusJakartaSans(
+                      color: isSelected ? Colors.white : const Color(0xFF334155),
+                      fontSize: 12.5,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                     ),
                   ),
                   if (count > 0) ...[
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.white.withOpacity(0.25) : AppColors.creamSoft,
-                        borderRadius: BorderRadius.circular(999),
+                        color: isSelected ? Colors.white.withOpacity(0.24) : AppColors.creamSoft,
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         '$count',
-                        style: TextStyle(
-                          fontSize: 11,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10.5,
                           fontWeight: FontWeight.w700,
                           color: isSelected ? Colors.white : AppColors.gray,
                         ),

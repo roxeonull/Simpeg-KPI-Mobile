@@ -145,7 +145,7 @@ class _CutiDetailScreenState extends State<CutiDetailScreen> {
                       child: ElevatedButton.icon(
                         onPressed: _approve,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
+                          backgroundColor: const Color(0xFF15803D),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           elevation: 0,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

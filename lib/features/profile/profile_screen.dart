@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/api_exception.dart';
+import '../../core/models/pegawai.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/status_badge.dart';
@@ -31,14 +33,17 @@ class _ProfileBody extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Text('Keluar Aplikasi'),
-        content: const Text('Anda yakin ingin keluar dari akun ini?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Keluar Aplikasi', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+        content: Text('Anda yakin ingin keluar dari akun ini?', style: GoogleFonts.plusJakartaSans(fontSize: 13.5)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Batal', style: GoogleFonts.plusJakartaSans(color: AppColors.gray, fontWeight: FontWeight.w600)),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Keluar', style: TextStyle(color: AppColors.danger)),
+            child: Text('Keluar', style: GoogleFonts.plusJakartaSans(color: AppColors.danger, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -65,6 +70,49 @@ class _ProfileBody extends StatelessWidget {
     );
   }
 
+  void _openAllPengajuanSheet(BuildContext context, List<PengajuanPerubahan> list) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(ctx).size.height * 0.7,
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+        decoration: const BoxDecoration(
+          color: AppColors.cream,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(999))),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Text(
+                  'Riwayat Pengajuan Perubahan Data',
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 15),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 20),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView.separated(
+                itemCount: list.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (_, i) => _PengajuanTile(item: list[i]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -81,12 +129,14 @@ class _ProfileBody extends StatelessWidget {
               child: Column(
                 children: [
                   Container(
-                    width: 84,
-                    height: 84,
+                    width: 86,
+                    height: 86,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(colors: AppColors.heroGradient),
                       borderRadius: BorderRadius.circular(26),
-                      boxShadow: [BoxShadow(color: AppColors.red.withOpacity(0.25), blurRadius: 20, offset: const Offset(0, 8))],
+                      boxShadow: [
+                        BoxShadow(color: AppColors.red.withOpacity(0.28), blurRadius: 22, offset: const Offset(0, 8)),
+                      ],
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(26),
@@ -98,7 +148,7 @@ class _ProfileBody extends StatelessWidget {
                                 return Center(
                                   child: Text(
                                     pegawai.initials,
-                                    style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800),
+                                    style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800),
                                   ),
                                 );
                               },
@@ -106,15 +156,21 @@ class _ProfileBody extends StatelessWidget {
                           : Center(
                               child: Text(
                                 pegawai?.initials ?? '?',
-                                style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800),
+                                style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800),
                               ),
                             ),
                     ),
                   ),
                   const SizedBox(height: 14),
-                  Text(pegawai?.nama ?? auth.user?.name ?? '', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
-                  Text(pegawai?.jabatan ?? '-', style: const TextStyle(fontSize: 13, color: AppColors.gray)),
+                  Text(
+                    pegawai?.nama ?? auth.user?.name ?? '',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.black),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    pegawai?.jabatan ?? '-',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 13, color: const Color(0xFF64748B), fontWeight: FontWeight.w500),
+                  ),
                   const SizedBox(height: 10),
                   if (pegawai?.statusKepegawaian != null)
                     StatusBadge(label: pegawai!.statusKepegawaian!, tone: BadgeTone.info),
@@ -124,29 +180,29 @@ class _ProfileBody extends StatelessWidget {
             const SizedBox(height: 26),
             _SectionCard(
               children: [
-                _InfoRow(icon: Icons.badge_rounded, label: 'NIP', value: pegawai?.nip ?? '-'),
+                _InfoRow(icon: Icons.badge_outlined, label: 'NIP', value: pegawai?.nip ?? '-'),
                 _InfoRow(icon: Icons.apartment_rounded, label: 'Unit Kerja', value: pegawai?.unit ?? '-'),
-                _InfoRow(icon: Icons.mail_rounded, label: 'Email', value: pegawai?.email ?? auth.user?.email ?? '-'),
-                _InfoRow(icon: Icons.call_rounded, label: 'No. HP', value: pegawai?.noHp ?? '-'),
-                _InfoRow(icon: Icons.location_on_rounded, label: 'Alamat', value: pegawai?.alamat ?? '-', isLast: true),
+                _InfoRow(icon: Icons.mail_outlined, label: 'Email', value: pegawai?.email ?? auth.user?.email ?? '-'),
+                _InfoRow(icon: Icons.call_outlined, label: 'No. HP', value: pegawai?.noHp ?? '-'),
+                _InfoRow(icon: Icons.location_on_outlined, label: 'Alamat', value: pegawai?.alamat ?? '-', isLast: true),
               ],
             ),
             const SizedBox(height: 16),
             _MenuTile(
-              icon: Icons.badge_rounded,
-              label: 'Data Pegawai',
+              icon: Icons.badge_outlined,
+              label: 'Data Pegawai Lengkap',
               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DataPegawaiScreen())),
             ),
             const SizedBox(height: 10),
             _MenuTile(
-              icon: Icons.school_rounded,
+              icon: Icons.school_outlined,
               label: 'Riwayat Pendidikan & Diklat',
               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RiwayatScreen())),
             ),
             const SizedBox(height: 10),
             _MenuTile(
               icon: Icons.lock_outline_rounded,
-              label: 'Ubah Password',
+              label: 'Ubah Password Akun',
               onTap: () => _openChangePasswordSheet(context),
             ),
             const SizedBox(height: 10),
@@ -162,23 +218,46 @@ class _ProfileBody extends StatelessWidget {
               },
             ),
             const SizedBox(height: 22),
-            const Text('Riwayat Pengajuan Perubahan', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Riwayat Pengajuan Perubahan',
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14.5, color: AppColors.black),
+                ),
+                if (profileProvider.pengajuan.length > 3)
+                  GestureDetector(
+                    onTap: () => _openAllPengajuanSheet(context, profileProvider.pengajuan),
+                    child: Text(
+                      'Lihat Semua (${profileProvider.pengajuan.length})',
+                      style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.red),
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(height: 12),
             if (profileProvider.isLoading)
               const SizedBox(height: 60, child: Center(child: CircularProgressIndicator(color: AppColors.red, strokeWidth: 2)))
             else if (profileProvider.pengajuan.isEmpty)
-              const EmptyState(icon: Icons.fact_check_outlined, title: 'Belum ada pengajuan perubahan data')
+              const EmptyState(icon: Icons.fact_check_outlined, title: 'Belum ada riwayat pengajuan perubahan data')
             else
-              ...profileProvider.pengajuan.map((p) => Padding(
+              ...profileProvider.pengajuan.take(3).map((p) => Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: _PengajuanTile(item: p),
                   )),
             const SizedBox(height: 26),
-            OutlinedButton.icon(
-              onPressed: () => _confirmLogout(context),
-              icon: const Icon(Icons.logout_rounded, size: 18, color: AppColors.danger),
-              label: const Text('Keluar', style: TextStyle(color: AppColors.danger)),
-              style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.dangerSoft, width: 1.4)),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _confirmLogout(context),
+                icon: const Icon(Icons.logout_rounded, size: 18, color: AppColors.danger),
+                label: Text('Keluar dari Akun', style: GoogleFonts.plusJakartaSans(color: AppColors.danger, fontWeight: FontWeight.w700)),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  side: const BorderSide(color: AppColors.dangerSoft, width: 1.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
             ),
           ],
         ),
@@ -194,7 +273,18 @@ class _SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
       child: Column(children: children),
     );
   }
@@ -210,16 +300,21 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(border: isLast ? null : const Border(bottom: BorderSide(color: AppColors.border))),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: AppColors.grayLight),
+          Icon(icon, size: 18, color: const Color(0xFF64748B)),
           const SizedBox(width: 14),
-          Text(label, style: const TextStyle(fontSize: 13, color: AppColors.gray)),
+          Text(label, style: GoogleFonts.plusJakartaSans(fontSize: 13, color: const Color(0xFF64748B), fontWeight: FontWeight.w500)),
           const Spacer(),
           Flexible(
-            child: Text(value, textAlign: TextAlign.right, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.black),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -243,16 +338,31 @@ class _MenuTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(color: AppColors.redSoft, borderRadius: BorderRadius.circular(11)),
-                child: Icon(icon, size: 17, color: AppColors.red),
+                child: Icon(icon, size: 18, color: AppColors.red),
               ),
               const SizedBox(width: 14),
-              Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5))),
+              Expanded(
+                child: Text(
+                  label,
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13.5, color: AppColors.black),
+                ),
+              ),
               const Icon(Icons.chevron_right_rounded, color: AppColors.grayLight),
             ],
           ),
@@ -316,9 +426,15 @@ class _PengajuanTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_getFieldLabel(item.field), style: const TextStyle(fontSize: 11.5, color: AppColors.grayLight, fontWeight: FontWeight.w700)),
+                Text(
+                  _getFieldLabel(item.field),
+                  style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: AppColors.grayLight, fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 3),
-                Text(item.nilaiBaru, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                Text(
+                  item.nilaiBaru,
+                  style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w700, color: AppColors.black),
+                ),
               ],
             ),
           ),
@@ -328,8 +444,6 @@ class _PengajuanTile extends StatelessWidget {
     );
   }
 }
-
-
 
 class _ChangePasswordSheet extends StatefulWidget {
   const _ChangePasswordSheet();
@@ -360,7 +474,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Mohon periksa kembali password yang dimasukkan.'),
+          content: Text('Mohon periksa kembali password yang dimasukkan.', style: GoogleFonts.plusJakartaSans(fontSize: 13)),
           backgroundColor: AppColors.danger,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -378,7 +492,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Kata sandi berhasil diubah.'),
+            content: Text('Kata sandi berhasil diubah.', style: GoogleFonts.plusJakartaSans(fontSize: 13)),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -389,7 +503,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e is ApiException ? e.friendlyMessage : 'Terjadi kesalahan: $e'),
+            content: Text(e is ApiException ? e.friendlyMessage : 'Terjadi kesalahan: $e', style: GoogleFonts.plusJakartaSans(fontSize: 13)),
             backgroundColor: AppColors.danger,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -416,13 +530,14 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
             children: [
               Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(999)))),
               const SizedBox(height: 20),
-              const Text('Ubah Password', style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700)),
+              Text('Ubah Password', style: GoogleFonts.plusJakartaSans(fontSize: 16.5, fontWeight: FontWeight.w700)),
               const SizedBox(height: 4),
-              const Text('Masukkan kata sandi lama Anda dan kata sandi baru.', style: TextStyle(fontSize: 12.5, color: AppColors.gray)),
+              Text('Masukkan kata sandi lama Anda dan kata sandi baru.', style: GoogleFonts.plusJakartaSans(fontSize: 12.5, color: AppColors.gray)),
               const SizedBox(height: 20),
               TextFormField(
                 controller: _currentPasswordController,
                 obscureText: _obscureCurrent,
+                style: GoogleFonts.plusJakartaSans(fontSize: 13.5),
                 decoration: InputDecoration(
                   labelText: 'Password Lama',
                   hintText: 'Masukkan password lama',
@@ -437,6 +552,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
               TextFormField(
                 controller: _newPasswordController,
                 obscureText: _obscureNew,
+                style: GoogleFonts.plusJakartaSans(fontSize: 13.5),
                 decoration: InputDecoration(
                   labelText: 'Password Baru',
                   hintText: 'Masukkan password baru (min. 8 karakter)',
@@ -455,6 +571,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
               TextFormField(
                 controller: _confirmPasswordController,
                 obscureText: _obscureConfirm,
+                style: GoogleFonts.plusJakartaSans(fontSize: 13.5),
                 decoration: InputDecoration(
                   labelText: 'Konfirmasi Password Baru',
                   hintText: 'Masukkan kembali password baru',
@@ -472,9 +589,16 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: provider.isSubmitting ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.red,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
                 child: provider.isSubmitting
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white))
-                    : const Text('Simpan Password'),
+                    : Text('Simpan Password', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14)),
               ),
             ],
           ),

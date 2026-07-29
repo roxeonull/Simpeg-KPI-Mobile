@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.example.simpeg_kpi_mobile"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

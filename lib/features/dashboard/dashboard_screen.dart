@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/models/cuti.dart';
@@ -63,40 +64,87 @@ class _DashboardBody extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _greeting(),
-                            style: const TextStyle(
-                              color: AppColors.gray,
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            pegawai?.nama ?? auth.user?.name ?? '',
-                            style: const TextStyle(
-                              fontSize: 21,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.black,
-                              letterSpacing: -0.4,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                // Modern Profile Header Card
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.black.withOpacity(0.06), width: 1.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
                       ),
-                    ),
-                    _Avatar(
-                      initials: pegawai?.initials ?? '?',
-                      foto: pegawai?.foto,
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      _Avatar(
+                        initials: pegawai?.initials ?? '?',
+                        foto: pegawai?.foto,
+                        size: 48,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  _greeting(),
+                                  style: GoogleFonts.plusJakartaSans(
+                                    color: const Color(0xFF64748B),
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Text('👋', style: TextStyle(fontSize: 12)),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              pegawai?.nama ?? auth.user?.name ?? '',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 17.5,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF0F172A),
+                                letterSpacing: -0.3,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (pegawai?.jabatan != null && pegawai!.jabatan!.isNotEmpty) ...[
+                              const SizedBox(height: 3),
+                              Text(
+                                pegawai.jabatan!,
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: AppColors.red,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ] else if (pegawai?.nip != null && pegawai!.nip.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                'NIP. ${pegawai.nip}',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: AppColors.gray,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 20),
 
@@ -216,54 +264,83 @@ class _DashboardContent extends StatelessWidget {
 class _Avatar extends StatelessWidget {
   final String initials;
   final String? foto;
-  const _Avatar({required this.initials, this.foto});
+  final double size;
+
+  const _Avatar({
+    required this.initials,
+    this.foto,
+    this.size = 48,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: AppColors.goldGradient),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.gold.withOpacity(0.25),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFB91C1C), Color(0xFFDC2626)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.red.withOpacity(0.22),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: foto != null && foto!.isNotEmpty
-            ? Image.network(
-                foto!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: foto != null && foto!.isNotEmpty
+                ? Image.network(
+                    foto!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Center(
+                        child: Text(
+                          initials,
+                          style: GoogleFonts.plusJakartaSans(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                          ),
+                        ),
+                      );
+                    },
+                  )
+                : Center(
                     child: Text(
                       initials,
-                      style: const TextStyle(
-                        color: AppColors.black,
+                      style: GoogleFonts.plusJakartaSans(
+                        color: Colors.white,
                         fontWeight: FontWeight.w800,
-                        fontSize: 15,
+                        fontSize: 16,
                       ),
                     ),
-                  );
-                },
-              )
-            : Center(
-                child: Text(
-                  initials,
-                  style: const TextStyle(
-                    color: AppColors.black,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 15,
                   ),
-                ),
-              ),
-      ),
+          ),
+        ),
+        Positioned(
+          right: -1,
+          bottom: -1,
+          child: Container(
+            width: 13,
+            height: 13,
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2.2),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

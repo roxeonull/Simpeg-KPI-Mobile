@@ -1,6 +1,7 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/api_exception.dart';
@@ -36,6 +37,8 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
   DateTime? _akhir;
   DateTime? _tglSertifikat;
   File? _sertifikat;
+  String? _sertifikatFileName;
+  bool _isPdf = false;
 
   bool _initialized = false;
 
@@ -127,17 +130,32 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
   }
 
   Future<void> _pickSertifikat() async {
-    final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
-    if (file != null) {
-      setState(() => _sertifikat = File(file.path));
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final path = result.files.single.path!;
+        final fileName = result.files.single.name;
+        final isPdf = fileName.toLowerCase().endsWith('.pdf');
+
+        setState(() {
+          _sertifikat = File(path);
+          _sertifikatFileName = fileName;
+          _isPdf = isPdf;
+        });
+      }
+    } catch (e) {
+      _showSnack('Gagal memilih berkas sertifikat: $e', success: false);
     }
   }
 
   void _showSnack(String message, {required bool success}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message, style: GoogleFonts.plusJakartaSans(fontSize: 13, color: Colors.white)),
         backgroundColor: success ? AppColors.success : AppColors.danger,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -159,7 +177,7 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
       return;
     }
     if (_sertifikat == null) {
-      _showSnack('Berkas sertifikat wajib diunggah.', success: false);
+      _showSnack('Berkas sertifikat (PDF/Gambar) wajib diunggah.', success: false);
       return;
     }
 
@@ -196,13 +214,20 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: AppColors.red, letterSpacing: 0.3),
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 13.5, color: AppColors.red, letterSpacing: 0.5),
           ),
           const SizedBox(height: 16),
           ...children,
@@ -217,10 +242,90 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
       child: RichText(
         text: TextSpan(
           text: text,
-          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.black),
+          style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.black),
           children: [
             if (required)
               const TextSpan(text: ' *', style: TextStyle(color: AppColors.danger)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSertifikatPickerBox() {
+    final hasFile = _sertifikat != null;
+
+    return GestureDetector(
+      onTap: _pickSertifikat,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: hasFile ? const Color(0xFFF0FDF4) : AppColors.creamSoft.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: hasFile ? const Color(0xFF16A34A) : AppColors.border,
+            width: hasFile ? 1.5 : 1.0,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: hasFile
+                    ? (_isPdf ? const Color(0xFFDC2626).withOpacity(0.12) : const Color(0xFF16A34A).withOpacity(0.12))
+                    : AppColors.grayLight.withOpacity(0.18),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                hasFile
+                    ? (_isPdf ? Icons.picture_as_pdf_rounded : Icons.image_rounded)
+                    : Icons.upload_file_rounded,
+                color: hasFile
+                    ? (_isPdf ? const Color(0xFFDC2626) : const Color(0xFF16A34A))
+                    : AppColors.gray,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    hasFile ? (_sertifikatFileName ?? 'File Terlampir') : 'Pilih Berkas Sertifikat (PDF / Gambar)',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: hasFile ? AppColors.black : const Color(0xFF475569),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    hasFile
+                        ? (_isPdf ? 'Dokumen PDF terlampir siap diunggah' : 'Berkas Gambar (JPG/PNG) terlampir')
+                        : 'Mendukung format PDF, JPG, JPEG, PNG',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: hasFile ? const Color(0xFF16A34A) : AppColors.gray,
+                      fontWeight: hasFile ? FontWeight.w600 : FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (hasFile)
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF16A34A),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check_rounded, color: Colors.white, size: 14),
+              ),
           ],
         ),
       ),
@@ -234,11 +339,13 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.cream,
-      appBar: AppBar(title: const Text('Tambah Pelatihan')),
+      appBar: AppBar(
+        title: Text('Tambah Pelatihan', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+      ),
       body: !_initialized || provider.isLoadingOptions
           ? const _LoadingState()
           : options == null
-              ? const Center(child: Text('Gagal mengambil data master opsi.'))
+              ? Center(child: Text('Gagal mengambil data master opsi.', style: GoogleFonts.plusJakartaSans()))
               : Form(
                   key: _formKey,
                   child: ListView(
@@ -251,6 +358,7 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
                           _buildLabel('Nama Kursus/Pelatihan', required: true),
                           TextFormField(
                             controller: _namaController,
+                            style: GoogleFonts.plusJakartaSans(fontSize: 13.5),
                             decoration: const InputDecoration(hintText: 'Contoh: Pelatihan Keamanan Siber SPBE'),
                             validator: (v) => (v == null || v.trim().isEmpty) ? 'Nama pelatihan wajib diisi' : null,
                           ),
@@ -258,6 +366,7 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
                           _buildLabel('Bidang SDM SPBE (Opsional)'),
                           TextFormField(
                             controller: _bidangController,
+                            style: GoogleFonts.plusJakartaSans(fontSize: 13.5),
                             decoration: const InputDecoration(hintText: 'Contoh: Manajemen Layanan SPBE'),
                           ),
                           const SizedBox(height: 14),
@@ -269,7 +378,7 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
                             items: options.bentukPelatihans.map((opt) {
                               return DropdownMenuItem<int>(
                                 value: opt.id,
-                                child: Text(opt.namaBentuk),
+                                child: Text(opt.namaBentuk, style: GoogleFonts.plusJakartaSans(fontSize: 13.5)),
                               );
                             }).toList(),
                             onChanged: (val) {
@@ -293,7 +402,7 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
                                     .map((opt) {
                                     return DropdownMenuItem<int>(
                                       value: opt.id,
-                                      child: Text(opt.namaTipe),
+                                      child: Text(opt.namaTipe, style: GoogleFonts.plusJakartaSans(fontSize: 13.5)),
                                     );
                                   }).toList(),
                             onChanged: _bentukId == null
@@ -312,7 +421,7 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
                             items: options.jenisKursuses.map((opt) {
                               return DropdownMenuItem<int>(
                                 value: opt.id,
-                                child: Text(opt.namaJenis),
+                                child: Text(opt.namaJenis, style: GoogleFonts.plusJakartaSans(fontSize: 13.5)),
                               );
                             }).toList(),
                             onChanged: (val) {
@@ -330,6 +439,7 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
                           _buildLabel('Institusi Penyelenggara', required: true),
                           TextFormField(
                             controller: _penyelenggaraController,
+                            style: GoogleFonts.plusJakartaSans(fontSize: 13.5),
                             decoration: const InputDecoration(hintText: 'Contoh: Pusdiklat Kemenkominfo'),
                             validator: (v) => (v == null || v.trim().isEmpty) ? 'Institusi penyelenggara wajib diisi' : null,
                           ),
@@ -342,7 +452,7 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
                             items: options.instansis.map((opt) {
                               return DropdownMenuItem<int>(
                                 value: opt.id,
-                                child: Text(opt.namaInstansi),
+                                child: Text(opt.namaInstansi, style: GoogleFonts.plusJakartaSans(fontSize: 13.5)),
                               );
                             }).toList(),
                             onChanged: (val) {
@@ -373,7 +483,7 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
                                   const SizedBox(width: 12),
                                   Text(
                                     _mulai == null ? 'Pilih Tanggal Mulai' : Formatters.tanggalPendek(_mulai!),
-                                    style: TextStyle(
+                                    style: GoogleFonts.plusJakartaSans(
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.w600,
                                       color: _mulai == null ? AppColors.grayLight : AppColors.black,
@@ -400,7 +510,7 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
                                   const SizedBox(width: 12),
                                   Text(
                                     _akhir == null ? 'Pilih Tanggal Akhir' : Formatters.tanggalPendek(_akhir!),
-                                    style: TextStyle(
+                                    style: GoogleFonts.plusJakartaSans(
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.w600,
                                       color: _akhir == null ? AppColors.grayLight : AppColors.black,
@@ -415,6 +525,7 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
                           TextFormField(
                             controller: _durasiController,
                             keyboardType: TextInputType.number,
+                            style: GoogleFonts.plusJakartaSans(fontSize: 13.5),
                             decoration: const InputDecoration(hintText: 'Contoh: 32'),
                             validator: (v) {
                               if (v == null || v.trim().isEmpty) return 'Durasi JP wajib diisi';
@@ -433,6 +544,7 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
                           _buildLabel('Nomor Sertifikat', required: true),
                           TextFormField(
                             controller: _noSertifikatController,
+                            style: GoogleFonts.plusJakartaSans(fontSize: 13.5),
                             decoration: const InputDecoration(hintText: 'Contoh: CERT/SPBE/2026/001'),
                             validator: (v) => (v == null || v.trim().isEmpty) ? 'Nomor sertifikat wajib diisi' : null,
                           ),
@@ -453,7 +565,7 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
                                   const SizedBox(width: 12),
                                   Text(
                                     _tglSertifikat == null ? 'Pilih Tanggal Sertifikat' : Formatters.tanggalPendek(_tglSertifikat!),
-                                    style: TextStyle(
+                                    style: GoogleFonts.plusJakartaSans(
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.w600,
                                       color: _tglSertifikat == null ? AppColors.grayLight : AppColors.black,
@@ -464,33 +576,8 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
                             ),
                           ),
                           const SizedBox(height: 14),
-                          _buildLabel('File Arsip Sertifikat (Wajib)', required: true),
-                          GestureDetector(
-                            onTap: _pickSertifikat,
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: AppColors.creamSoft.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.border),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.attach_file_rounded, color: AppColors.gray, size: 18),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      _sertifikat != null
-                                          ? _sertifikat!.path.split('/').last
-                                          : 'Pilih File Gambar Sertifikat',
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 13, color: AppColors.gray),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                          _buildLabel('File Arsip Sertifikat (PDF / Gambar)', required: true),
+                          _buildSertifikatPickerBox(),
                         ],
                       ),
 
@@ -510,7 +597,10 @@ class _PelatihanFormScreenState extends State<PelatihanFormScreen> {
                                 height: 22,
                                 child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white),
                               )
-                            : const Text('Simpan & Kirim Pelatihan', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
+                            : Text(
+                                'Simpan & Kirim Pelatihan',
+                                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14.5),
+                              ),
                       ),
                     ],
                   ),
