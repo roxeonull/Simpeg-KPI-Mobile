@@ -26,8 +26,11 @@ class RiwayatProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final res = await _api.request('/riwayat/pendidikan');
+      debugPrint('[RiwayatProvider] RAW /riwayat/pendidikan response: ${res.data}');
       pendidikan = (res.data['data'] as List).map((e) => RiwayatPendidikan.fromJson(e)).toList();
-    } catch (_) {}
+    } catch (e, stack) {
+      debugPrint('[RiwayatProvider] Error loading pendidikan: $e\n$stack');
+    }
     isLoadingPendidikan = false;
     notifyListeners();
   }

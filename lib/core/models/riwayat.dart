@@ -20,7 +20,9 @@ class RiwayatPendidikan {
         jenjang: json['jenjang'],
         institusi: json['institusi'],
         jurusan: json['jurusan'],
-        tahunLulus: json['tahun_lulus'],
+        tahunLulus: json['tahun_lulus'] is int
+            ? json['tahun_lulus']
+            : (int.tryParse(json['tahun_lulus'].toString()) ?? 0),
         fileIjazah: json['file_ijazah'],
       );
 }
