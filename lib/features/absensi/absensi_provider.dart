@@ -35,6 +35,12 @@ class AbsensiProvider extends ChangeNotifier {
   bool get isInsideGeofence =>
       distanceToOfficeMeters != null && distanceToOfficeMeters! <= officeRadiusMeters;
 
+  bool get isWeekendNonShift {
+    final now = DateTime.now();
+    final isWeekend = now.weekday == DateTime.saturday || now.weekday == DateTime.sunday;
+    return isWeekend && shiftHariIni == null;
+  }
+
   List<Absensi> history = [];
   bool isLoadingHistory = true;
 

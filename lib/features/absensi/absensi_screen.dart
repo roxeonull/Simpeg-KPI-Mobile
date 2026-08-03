@@ -137,6 +137,7 @@ class _PresensiCard extends StatelessWidget {
     final sudahMasuk = today?.jamMasuk != null;
     final sudahKeluar = today?.jamKeluar != null;
 
+    final bool isWeekendNonShift = provider.isWeekendNonShift;
     final bool isLiburHariIni = shift != null && shift.isLibur;
     final String liburNama = shift?.statusShift?.nama ?? 'Hari Ini Libur (Reguler)';
 
@@ -144,7 +145,7 @@ class _PresensiCard extends StatelessWidget {
     bool isJendelaBelumBuka = false;
     String jamBukaStr = '05:00';
 
-    if (!sudahMasuk && !isLiburHariIni) {
+    if (!sudahMasuk && !isLiburHariIni && !isWeekendNonShift) {
       int windowOpenMinutes = 5 * 60; // default 05:00 untuk pegawai normal
       jamBukaStr = '05:00';
 
@@ -234,18 +235,42 @@ class _PresensiCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            isLiburHariIni
-                ? 'Hari Ini Libur ($liburNama)'
-                : (sudahKeluar
-                    ? 'Presensi Hari Ini Selesai'
-                    : (sudahMasuk
-                        ? 'Jangan Lupa Presensi Pulang'
-                        : (isJendelaBelumBuka
-                            ? 'Belum Jam Presensi'
-                            : 'Mulai Presensi Masuk'))),
+            isWeekendNonShift
+                ? 'Hari Ini Libur Akhir Pekan'
+                : (isLiburHariIni
+                    ? 'Hari Ini Libur ($liburNama)'
+                    : (sudahKeluar
+                        ? 'Presensi Hari Ini Selesai'
+                        : (sudahMasuk
+                            ? 'Jangan Lupa Presensi Pulang'
+                            : (isJendelaBelumBuka
+                                ? 'Belum Jam Presensi'
+                                : 'Mulai Presensi Masuk')))),
             style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
           ),
-          if (isLiburHariIni) ...[
+          if (isWeekendNonShift) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.weekend_rounded, color: Colors.white, size: 16),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Hari ini adalah hari libur (akhir pekan), presensi tidak diperlukan.',
+                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else if (isLiburHariIni) ...[
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
@@ -304,29 +329,33 @@ class _PresensiCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: (provider.isSubmitting || isLiburHariIni || isJendelaBelumBuka)
+              onPressed: (provider.isSubmitting || isLiburHariIni || isJendelaBelumBuka || isWeekendNonShift)
                   ? null
                   : (sudahKeluar ? null : (sudahMasuk ? onKeluar : onMasuk)),
               icon: provider.isSubmitting
                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.red))
                   : Icon(
-                      isLiburHariIni
-                          ? Icons.event_available_rounded
-                          : (isJendelaBelumBuka
-                              ? Icons.lock_clock_rounded
-                              : (sudahMasuk ? Icons.logout_rounded : Icons.camera_alt_rounded)),
+                      isWeekendNonShift
+                          ? Icons.event_busy_rounded
+                          : (isLiburHariIni
+                              ? Icons.event_available_rounded
+                              : (isJendelaBelumBuka
+                                  ? Icons.lock_clock_rounded
+                                  : (sudahMasuk ? Icons.logout_rounded : Icons.camera_alt_rounded))),
                       size: 18,
                     ),
               label: Text(
-                isLiburHariIni
-                    ? 'Hari Ini Libur'
-                    : (isJendelaBelumBuka
-                        ? 'Presensi Buka Pukul $jamBukaStr'
-                        : (sudahKeluar
-                            ? 'Presensi Selesai'
-                            : (provider.isSubmitting
-                                ? 'Memproses...'
-                                : (sudahMasuk ? 'Presensi Pulang' : 'Presensi Masuk (Selfie)')))),
+                isWeekendNonShift
+                    ? 'Hari Ini Libur Akhir Pekan'
+                    : (isLiburHariIni
+                        ? 'Hari Ini Libur'
+                        : (isJendelaBelumBuka
+                            ? 'Presensi Buka Pukul $jamBukaStr'
+                            : (sudahKeluar
+                                ? 'Presensi Selesai'
+                                : (provider.isSubmitting
+                                    ? 'Memproses...'
+                                    : (sudahMasuk ? 'Presensi Pulang' : 'Presensi Masuk (Selfie)'))))),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
