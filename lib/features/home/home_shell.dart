@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/services/mock_location_guard_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/bouncing_button.dart';
 import '../absensi/absensi_screen.dart';
@@ -10,6 +11,7 @@ import '../cuti/cuti_list_screen.dart';
 import '../cuti/cuti_provider.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../profile/profile_screen.dart';
+import '../security/mock_location_warning_screen.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -18,8 +20,49 @@ class HomeShell extends StatefulWidget {
   State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   int _index = 0;
+  bool _isWarningShowing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkMockLocation();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkMockLocation();
+    }
+  }
+
+  Future<void> _checkMockLocation() async {
+    if (_isWarningShowing) return;
+    final bool isMock = await MockLocationGuardService.isMockLocationActive();
+    if (isMock && mounted) {
+      _isWarningShowing = true;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => MockLocationWarningScreen(
+            onResolved: () {
+              if (mounted && Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              }
+            },
+          ),
+        ),
+      );
+      _isWarningShowing = false;
+    }
+  }
 
   final _screens = const [
     DashboardScreen(),
@@ -77,7 +120,7 @@ class _HomeShellState extends State<HomeShell> {
                   borderRadius: BorderRadius.circular(26),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.22),
+                      color: Colors.black.withValues(alpha: 0.22),
                       blurRadius: 24,
                       offset: const Offset(0, 10),
                     ),
@@ -110,7 +153,7 @@ class _HomeShellState extends State<HomeShell> {
                             boxShadow: selected
                                 ? [
                                     BoxShadow(
-                                      color: AppColors.red.withOpacity(0.4),
+                                      color: AppColors.red.withValues(alpha: 0.4),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
@@ -126,7 +169,7 @@ class _HomeShellState extends State<HomeShell> {
                                   Icon(
                                     item.icon,
                                     size: 21,
-                                    color: selected ? Colors.white : Colors.white.withOpacity(0.45),
+                                    color: selected ? Colors.white : Colors.white.withValues(alpha: 0.45),
                                   ),
                                   if (isCutiTab && isAtasan && pendingCount > 0)
                                     Positioned(
@@ -156,7 +199,7 @@ class _HomeShellState extends State<HomeShell> {
                                 style: TextStyle(
                                   fontSize: 10.5,
                                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                                  color: selected ? Colors.white : Colors.white.withOpacity(0.45),
+                                  color: selected ? Colors.white : Colors.white.withValues(alpha: 0.45),
                                   letterSpacing: -0.1,
                                 ),
                                 child: Text(item.label),

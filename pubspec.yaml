@@ -30,6 +30,10 @@ dependencies:
   file_picker: ^8.1.7
   permission_handler: ^11.3.1
 
+  # Security & Mock Location Guard
+  safe_device: ^1.1.9
+  android_intent_plus: ^5.3.0
+
   # UI polish
   google_fonts: ^6.2.1
   fl_chart: ^0.69.2

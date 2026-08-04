@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/services/mock_location_guard_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../auth/auth_provider.dart';
 import '../auth/login_screen.dart';
 import '../home/home_shell.dart';
+import '../security/mock_location_warning_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -40,13 +42,21 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     }
     await minDelay;
 
+    // Cek status Mock Location / Developer Mode sebelum menentukan halaman tujuan
+    final bool isMockActive = await MockLocationGuardService.isMockLocationActive();
+
     if (!mounted) return;
+
+    final Widget targetScreen = isMockActive
+        ? const MockLocationWarningScreen()
+        : (auth.status == AuthStatus.authenticated ? const HomeShell() : const LoginScreen());
+
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
         pageBuilder: (_, animation, __) => FadeTransition(
           opacity: animation,
-          child: auth.status == AuthStatus.authenticated ? const HomeShell() : const LoginScreen(),
+          child: targetScreen,
         ),
       ),
     );

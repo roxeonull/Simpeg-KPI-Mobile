@@ -8,6 +8,10 @@ import '../../core/theme/app_colors.dart';
 import '../home/home_shell.dart';
 import 'auth_provider.dart';
 
+import '../../core/services/mock_location_guard_service.dart';
+
+import '../security/mock_location_warning_screen.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -15,11 +19,13 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscure = true;
+  bool _isWarningShowing = false;
 
   late AnimationController _animationController;
   late Animation<double> _bgOpacityAnimation;
@@ -30,6 +36,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -67,14 +74,43 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
 
     _animationController.forward();
+    _checkMockLocation();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _emailController.dispose();
     _passwordController.dispose();
     _animationController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkMockLocation();
+    }
+  }
+
+  Future<void> _checkMockLocation() async {
+    if (_isWarningShowing) return;
+    final bool isMock = await MockLocationGuardService.isMockLocationActive();
+    if (isMock && mounted) {
+      _isWarningShowing = true;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => MockLocationWarningScreen(
+            onResolved: () {
+              if (mounted && Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              }
+            },
+          ),
+        ),
+      );
+      _isWarningShowing = false;
+    }
   }
 
   Future<void> _submit() async {
@@ -150,8 +186,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppColors.redDark.withOpacity(0.45),
-                    AppColors.black.withOpacity(0.85),
+                    AppColors.redDark.withValues(alpha: 0.45),
+                    AppColors.black.withValues(alpha: 0.85),
                   ],
                 ),
               ),
@@ -196,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               Text(
                                 'Sistem Informasi Kepegawaian',
                                 style: GoogleFonts.plusJakartaSans(
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: Colors.white.withValues(alpha: 0.7),
                                   fontSize: 12,
                                   fontWeight: FontWeight.w400,
                                   letterSpacing: 0.3,
@@ -228,10 +264,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.11),
+                                    color: Colors.white.withValues(alpha: 0.11),
                                     borderRadius: BorderRadius.circular(24),
                                     border: Border.all(
-                                      color: Colors.white.withOpacity(0.22),
+                                      color: Colors.white.withValues(alpha: 0.22),
                                       width: 1.2,
                                     ),
                                   ),
@@ -254,7 +290,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                         Text(
                                           'Masuk untuk mengelola presensi, cuti, dan data kepegawaian Anda.',
                                           style: GoogleFonts.plusJakartaSans(
-                                            color: Colors.white.withOpacity(0.7),
+                                            color: Colors.white.withValues(alpha: 0.7),
                                             fontSize: 12,
                                             height: 1.4,
                                           ),
@@ -281,7 +317,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                           suffix: IconButton(
                                             icon: Icon(
                                               _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                              color: Colors.white.withOpacity(0.55),
+                                              color: Colors.white.withValues(alpha: 0.55),
                                               size: 20,
                                             ),
                                             onPressed: () => setState(() => _obscure = !_obscure),
@@ -293,14 +329,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                           onPressed: auth.isLoading ? null : _submit,
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: AppColors.red,
-                                            disabledBackgroundColor: AppColors.red.withOpacity(0.5),
+                                            disabledBackgroundColor: AppColors.red.withValues(alpha: 0.5),
                                             foregroundColor: Colors.white,
                                             padding: const EdgeInsets.symmetric(vertical: 13.5),
                                             shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(14),
                                             ),
                                             elevation: 2,
-                                            shadowColor: AppColors.red.withOpacity(0.3),
+                                            shadowColor: AppColors.red.withValues(alpha: 0.3),
                                           ),
                                           child: auth.isLoading
                                               ? const SizedBox(
@@ -331,11 +367,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                               child: Text(
                                                 'Lupa Kata Sandi?',
                                                 style: GoogleFonts.plusJakartaSans(
-                                                  color: Colors.white.withOpacity(0.8),
+                                                  color: Colors.white.withValues(alpha: 0.8),
                                                   fontSize: 12.5,
                                                   fontWeight: FontWeight.w600,
                                                   decoration: TextDecoration.underline,
-                                                  decorationColor: Colors.white.withOpacity(0.5),
+                                                  decorationColor: Colors.white.withValues(alpha: 0.5),
                                                 ),
                                               ),
                                             ),
@@ -355,7 +391,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             child: Text(
                               '© ${DateTime.now().year} Komisi Penyiaran Indonesia Pusat',
                               style: GoogleFonts.plusJakartaSans(
-                                color: Colors.white.withOpacity(0.4),
+                                color: Colors.white.withValues(alpha: 0.4),
                                 fontSize: 11,
                                 letterSpacing: 0.2,
                               ),
@@ -481,7 +517,7 @@ class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
               const SizedBox(height: 6),
               Text(
                 'Masukkan alamat email terdaftar Anda untuk mengirim link reset kata sandi.',
-                style: TextStyle(fontSize: 12.5, color: Colors.white.withOpacity(0.6), height: 1.4),
+                style: TextStyle(fontSize: 12.5, color: Colors.white.withValues(alpha: 0.6), height: 1.4),
               ),
               const SizedBox(height: 20),
               _DarkField(
@@ -500,7 +536,7 @@ class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
                 onPressed: _isLoading ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.red,
-                  disabledBackgroundColor: AppColors.red.withOpacity(0.5),
+                  disabledBackgroundColor: AppColors.red.withValues(alpha: 0.5),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(
@@ -562,16 +598,16 @@ class _DarkField extends StatelessWidget {
       style: const TextStyle(color: Colors.white, fontSize: 14),
       decoration: InputDecoration(
         filled: true,
-        fillColor: Colors.black.withOpacity(0.32),
+        fillColor: Colors.black.withValues(alpha: 0.32),
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.white.withOpacity(0.55), fontSize: 13.5),
-        prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.55), size: 20),
+        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 13.5),
+        prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.55), size: 20),
         suffixIcon: suffix,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.22), width: 1.0),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.22), width: 1.0),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
