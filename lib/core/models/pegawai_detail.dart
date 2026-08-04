@@ -186,7 +186,9 @@ class PegawaiDetail {
         kota: json['kota'],
         provinsi: json['provinsi'],
         kodePos: json['kode_pos'],
-        koordinatDomisili: json['koordinat_domisili'] ?? (json['lat_domisili'] != null && json['lng_domisili'] != null ? "${json['lat_domisili']}, ${json['lng_domisili']}" : null),
+        koordinatDomisili: (json['koordinat_domisili'] != null && json['koordinat_domisili'].toString().trim().isNotEmpty)
+            ? json['koordinat_domisili'].toString()
+            : (json['lat_domisili'] != null && json['lng_domisili'] != null ? "${json['lat_domisili']}, ${json['lng_domisili']}" : null),
         latDomisili: json['lat_domisili'] != null ? double.tryParse(json['lat_domisili'].toString()) : null,
         lngDomisili: json['lng_domisili'] != null ? double.tryParse(json['lng_domisili'].toString()) : null,
         nip: json['nip'],

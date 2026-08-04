@@ -407,6 +407,8 @@ class _PengajuanTile extends StatelessWidget {
         return 'Agama';
       case 'hobi':
         return 'Hobi';
+      case 'koordinat_domisili':
+        return 'Koordinat Titik Domisili WFH';
       default:
         return field.split('_').map((word) {
           if (word.isEmpty) return '';

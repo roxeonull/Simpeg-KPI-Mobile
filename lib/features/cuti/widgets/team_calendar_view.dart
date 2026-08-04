@@ -195,48 +195,56 @@ class _TeamCalendarViewState extends State<TeamCalendarView> {
       children: [
         // 1. Navigation Header
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '${_monthNames[_currentMonth.month - 1]} ${_currentMonth.year}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.black),
+              Expanded(
+                child: Text(
+                  '${_monthNames[_currentMonth.month - 1]} ${_currentMonth.year}',
+                  style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: AppColors.black),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
                     onPressed: () => _changeMonth(-1),
-                    icon: const Icon(Icons.chevron_left_rounded, color: AppColors.gray),
+                    icon: const Icon(Icons.chevron_left_rounded, color: AppColors.gray, size: 20),
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    padding: EdgeInsets.zero,
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.white,
                       side: const BorderSide(color: AppColors.border),
-                      padding: const EdgeInsets.all(8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
                     ),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 4),
                   TextButton(
                     onPressed: _goToToday,
                     style: TextButton.styleFrom(
                       backgroundColor: Colors.white,
                       side: const BorderSide(color: AppColors.border),
                       foregroundColor: AppColors.black,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+                      textStyle: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
                     ),
                     child: const Text('Hari Ini'),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 4),
                   IconButton(
                     onPressed: () => _changeMonth(1),
-                    icon: const Icon(Icons.chevron_right_rounded, color: AppColors.gray),
+                    icon: const Icon(Icons.chevron_right_rounded, color: AppColors.gray, size: 20),
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    padding: EdgeInsets.zero,
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.white,
                       side: const BorderSide(color: AppColors.border),
-                      padding: const EdgeInsets.all(8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
                     ),
                   ),
                 ],
@@ -247,16 +255,16 @@ class _TeamCalendarViewState extends State<TeamCalendarView> {
 
         // 2. Legend Box
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border),
           ),
           child: Wrap(
-            spacing: 12,
-            runSpacing: 8,
+            spacing: 10,
+            runSpacing: 6,
             alignment: WrapAlignment.center,
             children: [
               _buildLegendItem(const Color(0xFF3B82F6), 'Tahunan'),
@@ -267,36 +275,35 @@ class _TeamCalendarViewState extends State<TeamCalendarView> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 10,
-                    height: 10,
+                    width: 9,
+                    height: 9,
                     decoration: BoxDecoration(
                       color: AppColors.grayLight.withOpacity(0.35),
                       shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(width: 5),
-                  const Text('Faded = Menunggu', style: TextStyle(fontSize: 11, color: AppColors.gray, fontWeight: FontWeight.w500)),
+                  const SizedBox(width: 4),
+                  const Text('Faded = Menunggu', style: TextStyle(fontSize: 10.5, color: AppColors.gray, fontWeight: FontWeight.w500)),
                 ],
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
 
         // 3. Weekdays Header
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: const [
-              _WeekdayLabel(label: 'Sen'),
-              _WeekdayLabel(label: 'Sel'),
-              _WeekdayLabel(label: 'Rab'),
-              _WeekdayLabel(label: 'Kam'),
-              _WeekdayLabel(label: 'Jum'),
-              _WeekdayLabel(label: 'Sab'),
-              _WeekdayLabel(label: 'Min'),
+              Expanded(child: _WeekdayLabel(label: 'Sen')),
+              Expanded(child: _WeekdayLabel(label: 'Sel')),
+              Expanded(child: _WeekdayLabel(label: 'Rab')),
+              Expanded(child: _WeekdayLabel(label: 'Kam')),
+              Expanded(child: _WeekdayLabel(label: 'Jum')),
+              Expanded(child: _WeekdayLabel(label: 'Sab')),
+              Expanded(child: _WeekdayLabel(label: 'Min')),
             ],
           ),
         ),
@@ -308,13 +315,13 @@ class _TeamCalendarViewState extends State<TeamCalendarView> {
           child: provider.isLoadingKalender
               ? const _CalendarShimmer()
               : Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: GridView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 7,
-                      mainAxisSpacing: 6,
-                      crossAxisSpacing: 6,
+                      mainAxisSpacing: 5,
+                      crossAxisSpacing: 5,
                       childAspectRatio: 1.0,
                     ),
                     itemCount: 42,
@@ -333,7 +340,7 @@ class _TeamCalendarViewState extends State<TeamCalendarView> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: isToday ? AppColors.redSoft : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                               color: isToday ? AppColors.red.withOpacity(0.5) : AppColors.border,
                               width: isToday ? 1.4 : 1.0,
@@ -345,7 +352,7 @@ class _TeamCalendarViewState extends State<TeamCalendarView> {
                               Text(
                                 '${date.day}',
                                 style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 12.5,
                                   fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
                                   color: isCurrentMonth
                                       ? (isToday ? AppColors.red : AppColors.black)
@@ -353,16 +360,16 @@ class _TeamCalendarViewState extends State<TeamCalendarView> {
                                 ),
                               ),
                               if (dayCutis.isNotEmpty) ...[
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 3),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: dayCutis.take(3).map<Widget>((item) {
                                     final isApproved = item['status'] == 'disetujui';
                                     final color = _getCutiColor(item['jenis_cuti']);
                                     return Container(
-                                      width: 5,
-                                      height: 5,
-                                      margin: const EdgeInsets.symmetric(horizontal: 1),
+                                      width: 4.5,
+                                      height: 4.5,
+                                      margin: const EdgeInsets.symmetric(horizontal: 0.8),
                                       decoration: BoxDecoration(
                                         color: color.withOpacity(isApproved ? 1.0 : 0.35),
                                         shape: BoxShape.circle,
@@ -388,12 +395,12 @@ class _TeamCalendarViewState extends State<TeamCalendarView> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 10,
-          height: 10,
+          width: 9,
+          height: 9,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 5),
-        Text(label, style: const TextStyle(fontSize: 11, color: AppColors.black, fontWeight: FontWeight.w600)),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 10.5, color: AppColors.black, fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -405,12 +412,11 @@ class _WeekdayLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 40,
+    return Center(
       child: Text(
         label,
         textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.gray),
+        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: AppColors.gray),
       ),
     );
   }

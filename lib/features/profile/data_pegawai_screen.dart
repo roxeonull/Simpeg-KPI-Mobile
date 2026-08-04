@@ -158,6 +158,7 @@ class _DataPegawaiBodyState extends State<_DataPegawaiBody> {
                               title: 'Alamat Lengkap',
                               children: [
                                 _InfoRow(label: 'Alamat Lengkap', value: d?.alamat),
+                                _InfoRow(label: 'Koordinat Domisili WFH', value: d?.koordinatDomisili),
                                 _InfoRow(label: 'Kelurahan', value: d?.kelurahan),
                                 _InfoRow(label: 'Kecamatan', value: d?.kecamatan),
                                 _InfoRow(label: 'Kota / Kabupaten', value: d?.kota),

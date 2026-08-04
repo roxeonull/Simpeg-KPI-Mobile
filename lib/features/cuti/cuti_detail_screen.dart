@@ -99,8 +99,7 @@ class _CutiDetailScreenState extends State<CutiDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isAtasan = context.watch<AuthProvider>().isAtasan;
-    final showApprovalBar = isAtasan && _cuti != null && (_cuti!.statusAtasan == 'menunggu' || _cuti!.status == 'menunggu_atasan');
+    final showApprovalBar = _cuti != null && _cuti!.canApprove == true;
 
     return Scaffold(
       backgroundColor: AppColors.cream,

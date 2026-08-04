@@ -35,6 +35,7 @@ class Cuti {
   final String? statusHr;
   final String? catatanHr;
   final String statusLabel;
+  final bool? canApprove;
   final DateTime? createdAt;
   final List<TimelineStep>? timeline;
 
@@ -59,6 +60,7 @@ class Cuti {
     this.statusHr,
     this.catatanHr,
     required this.statusLabel,
+    this.canApprove,
     this.createdAt,
     this.timeline,
   });
@@ -84,6 +86,7 @@ class Cuti {
         statusHr: json['status_hr'],
         catatanHr: json['catatan_hr'],
         statusLabel: json['status_label'] ?? json['status'],
+        canApprove: json['can_approve'],
         createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
         timeline: json['timeline'] != null
             ? (json['timeline'] as List).map((e) => TimelineStep.fromJson(e)).toList()
