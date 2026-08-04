@@ -65,23 +65,80 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> lupaPassword(String email) async {
+  Future<Map<String, dynamic>> requestOtp(String email) async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _api.request(
+        '/forgot-password/request-otp',
+        method: 'POST',
+        data: {'email': email},
+      );
+      return Map<String, dynamic>.from(response.data);
+    } on ApiException catch (e) {
+      errorMessage = e.friendlyMessage;
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<String> verifyOtp(String email, String otp) async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _api.request(
+        '/forgot-password/verify-otp',
+        method: 'POST',
+        data: {'email': email, 'otp': otp},
+      );
+      return response.data['reset_token'] as String;
+    } on ApiException catch (e) {
+      errorMessage = e.friendlyMessage;
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> resetPasswordWithOtp({
+    required String email,
+    required String resetToken,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
       await _api.request(
-        '/lupa-password',
+        '/forgot-password/reset-password',
         method: 'POST',
-        data: {'email': email},
+        data: {
+          'email': email,
+          'reset_token': resetToken,
+          'password': password,
+          'password_confirmation': passwordConfirmation,
+        },
       );
-    } on ApiException {
+    } on ApiException catch (e) {
+      errorMessage = e.friendlyMessage;
       rethrow;
     } finally {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> lupaPassword(String email) async {
+    await requestOtp(email);
   }
 
   Future<void> logout() async {

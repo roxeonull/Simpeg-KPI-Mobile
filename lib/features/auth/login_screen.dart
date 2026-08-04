@@ -11,6 +11,7 @@ import 'auth_provider.dart';
 import '../../core/services/mock_location_guard_service.dart';
 
 import '../security/mock_location_warning_screen.dart';
+import 'forgot_password_modal.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -141,12 +142,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   void _openForgotPasswordSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const _ForgotPasswordSheet(),
-    );
+    ForgotPasswordModal.show(context);
   }
 
   @override
@@ -411,163 +407,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 }
 
-class _ForgotPasswordSheet extends StatefulWidget {
-  const _ForgotPasswordSheet();
 
-  @override
-  State<_ForgotPasswordSheet> createState() => _ForgotPasswordSheetState();
-}
-
-class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  bool _isLoading = false;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Mohon masukkan alamat email yang valid.'),
-          backgroundColor: AppColors.danger,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-      return;
-    }
-    FocusScope.of(context).unfocus();
-    setState(() => _isLoading = true);
-
-    try {
-      await context.read<AuthProvider>().lupaPassword(_emailController.text.trim());
-      if (mounted) {
-        Navigator.pop(context); // close bottom sheet
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-            title: const Text('Reset Kata Sandi'),
-            content: const Text(
-              'Jika email terdaftar, link reset password telah dikirim. Silakan cek email Anda atau hubungi Admin HR jika mengalami kendala.'
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e is ApiException ? e.friendlyMessage : 'Terjadi kesalahan: $e'),
-            backgroundColor: AppColors.danger,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 14, 24, 28),
-        decoration: const BoxDecoration(
-          color: Color(0xFF1B1614),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Lupa Kata Sandi',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Masukkan alamat email terdaftar Anda untuk mengirim link reset kata sandi.',
-                style: TextStyle(fontSize: 12.5, color: Colors.white.withValues(alpha: 0.6), height: 1.4),
-              ),
-              const SizedBox(height: 20),
-              _DarkField(
-                controller: _emailController,
-                hint: 'Email',
-                icon: Icons.mail_outline_rounded,
-                keyboardType: TextInputType.emailAddress,
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Email wajib diisi';
-                  if (!v.contains('@')) return 'Format email tidak valid';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.red,
-                  disabledBackgroundColor: AppColors.red.withValues(alpha: 0.5),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Kirim Link Reset',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _DarkField extends StatelessWidget {
   final TextEditingController controller;
