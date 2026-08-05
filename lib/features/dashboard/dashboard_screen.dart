@@ -22,6 +22,7 @@ import '../profile/data_pegawai_screen.dart';
 import '../profile/pengajuan_perubahan_screen.dart';
 import '../notification/notification_provider.dart';
 import '../notification/notification_center_screen.dart';
+import '../dinas_luar/dinas_luar_list_screen.dart';
 import 'dashboard_provider.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -981,6 +982,18 @@ class _QuickMenuGrid extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const PengajuanPerubahanScreen()),
+          );
+        },
+      ),
+      _QuickMenuItemData(
+        label: 'Dinas Luar',
+        icon: Icons.business_center_rounded,
+        accentColor: const Color(0xFF0EA5E9),
+        bgColor: const Color(0xFFE0F2FE),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const DinasLuarListScreen()),
           );
         },
       ),

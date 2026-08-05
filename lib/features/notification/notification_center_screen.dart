@@ -11,6 +11,7 @@ import '../auth/auth_provider.dart';
 import '../cuti/cuti_detail_screen.dart';
 import '../cuti/cuti_list_screen.dart';
 import '../cuti/cuti_provider.dart';
+import '../dinas_luar/dinas_luar_list_screen.dart';
 import 'notification_provider.dart';
 
 class NotificationCenterScreen extends StatefulWidget {
@@ -78,6 +79,12 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
           ),
         );
       }
+    } else if (type == 'dinas_luar') {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const DinasLuarListScreen(),
+        ),
+      );
     }
   }
 

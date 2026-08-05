@@ -33,13 +33,17 @@ class AbsensiProvider extends ChangeNotifier {
   double officeLng = 106.82246468208389;
   double officeRadiusMeters = 100.0;
 
+  // Dinas Luar & Geofence Bypass State
+  bool isDinasLuarAktif = false;
+  String? dinasLuarKetidakhadiranNama;
+
   bool get isInsideGeofence =>
-      distanceToOfficeMeters != null && distanceToOfficeMeters! <= officeRadiusMeters;
+      isDinasLuarAktif || (distanceToOfficeMeters != null && distanceToOfficeMeters! <= officeRadiusMeters);
 
   bool get isWeekendNonShift {
     final now = DateTime.now();
     final isWeekend = now.weekday == DateTime.saturday || now.weekday == DateTime.sunday;
-    return isWeekend && shiftHariIni == null;
+    return isWeekend && shiftHariIni == null && !isDinasLuarAktif;
   }
 
   List<Absensi> history = [];
@@ -82,6 +86,14 @@ class AbsensiProvider extends ChangeNotifier {
       }
       if (res.data['office_radius_meters'] != null) {
         officeRadiusMeters = (res.data['office_radius_meters'] as num).toDouble();
+      }
+
+      if (res.data['is_dinas_luar_aktif'] == true || res.data['bypass_geofence'] == true) {
+        isDinasLuarAktif = true;
+        dinasLuarKetidakhadiranNama = res.data['dinas_luar_nama'] as String? ?? 'Dinas Luar / Tugas Khusus';
+      } else {
+        isDinasLuarAktif = false;
+        dinasLuarKetidakhadiranNama = null;
       }
 
       updateCurrentLocation();

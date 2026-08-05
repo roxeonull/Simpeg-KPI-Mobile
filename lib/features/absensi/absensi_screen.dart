@@ -203,6 +203,20 @@ class _PresensiCard extends StatelessWidget {
               ),
               Row(
                 children: [
+                  if (provider.isDinasLuarAktif) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0EA5E9),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '💼 ${provider.dinasLuarKetidakhadiranNama ?? "Dinas Luar / WFA"}',
+                        style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
                   if (DateTime.now().weekday == DateTime.friday) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
