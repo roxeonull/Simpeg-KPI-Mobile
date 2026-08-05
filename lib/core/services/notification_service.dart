@@ -7,10 +7,13 @@ import 'package:provider/provider.dart';
 
 import '../api/api_client.dart';
 import '../api/token_storage.dart';
+import '../models/notification_item.dart';
+import 'notification_storage.dart';
 import '../../features/auth/auth_provider.dart';
 import '../../features/cuti/cuti_detail_screen.dart';
 import '../../features/cuti/cuti_list_screen.dart';
 import '../../features/cuti/cuti_provider.dart';
+import '../../features/notification/notification_provider.dart';
 
 /// Top-level background message handler for FCM
 @pragma('vm:entry-point')
@@ -57,12 +60,14 @@ class NotificationService {
     // 4. Handle Foreground Messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       debugPrint("Foreground FCM message received: ${message.notification?.title}");
+      _saveAndDispatchNotification(message);
       _showInAppBanner(message);
     });
 
     // 5. Handle Background App Opened (when user taps notification)
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       debugPrint("Notification clicked while app in background: ${message.data}");
+      _saveAndDispatchNotification(message, markRead: true);
       _handlePayloadNavigation(message.data);
     });
 
@@ -70,9 +75,39 @@ class NotificationService {
     RemoteMessage? initialMessage = await _fcm.getInitialMessage();
     if (initialMessage != null) {
       debugPrint("App launched from terminated notification click: ${initialMessage.data}");
+      _saveAndDispatchNotification(initialMessage, markRead: true);
       Future.delayed(const Duration(milliseconds: 600), () {
         _handlePayloadNavigation(initialMessage.data);
       });
+    }
+  }
+
+  /// Save FCM message to local storage & notify provider
+  Future<void> _saveAndDispatchNotification(RemoteMessage message, {bool markRead = false}) async {
+    try {
+      final id = message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString();
+      final title = message.notification?.title ?? message.data['title']?.toString() ?? 'Notifikasi Baru';
+      final body = message.notification?.body ?? message.data['body']?.toString() ?? '';
+      final type = message.data['type']?.toString() ?? 'sistem';
+
+      final item = NotificationItem(
+        id: id,
+        title: title,
+        body: body,
+        type: type,
+        payload: message.data,
+        timestamp: message.sentTime ?? DateTime.now(),
+        isRead: markRead,
+      );
+
+      await NotificationStorage().saveNotification(item);
+
+      final context = navigatorKey?.currentContext;
+      if (context != null && context.mounted) {
+        context.read<NotificationProvider>().addNotification(item);
+      }
+    } catch (e) {
+      debugPrint("Error saving FCM notification item: $e");
     }
   }
 

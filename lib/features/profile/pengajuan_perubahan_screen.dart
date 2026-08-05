@@ -3,10 +3,13 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import 'package:intl/intl.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/fade_slide_in.dart';
 import '../../core/widgets/shimmer_box.dart';
+import '../../core/widgets/status_badge.dart';
 import '../../core/models/pegawai_detail.dart';
 import 'profile_provider.dart';
 
@@ -16,7 +19,7 @@ class PengajuanPerubahanScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ProfileProvider()..loadDetailPegawai(),
+      create: (_) => ProfileProvider()..loadDetailPegawai()..load(),
       child: Scaffold(
         backgroundColor: AppColors.cream,
         body: Consumer<ProfileProvider>(
@@ -444,6 +447,95 @@ class _FormBodyState extends State<_FormBody> {
     }
   }
 
+  void _openRiwayatSheet(BuildContext context) {
+    final provider = context.read<ProfileProvider>();
+    if (provider.pengajuan.isEmpty && !provider.isLoading) {
+      provider.load();
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => ChangeNotifierProvider.value(
+        value: provider,
+        child: Consumer<ProfileProvider>(
+          builder: (context, p, _) {
+            return Container(
+              height: MediaQuery.of(ctx).size.height * 0.75,
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+              decoration: const BoxDecoration(
+                color: AppColors.cream,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.border,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFEF2F2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.history_rounded, color: AppColors.red, size: 20),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Riwayat Pengajuan Perubahan',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15.5,
+                            color: const Color(0xFF0F172A),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: p.isLoading
+                        ? const Center(child: CircularProgressIndicator(color: AppColors.red))
+                        : p.pengajuan.isEmpty
+                            ? const EmptyState(
+                                icon: Icons.fact_check_outlined,
+                                title: 'Belum Ada Riwayat',
+                                subtitle: 'Pengajuan perubahan data Anda akan tercatat di sini.',
+                              )
+                            : ListView.separated(
+                                itemCount: p.pengajuan.length,
+                                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                                itemBuilder: (_, i) => _RiwayatCardTile(item: p.pengajuan[i]),
+                              ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final d = widget.pegawaiDetail;
@@ -455,6 +547,38 @@ class _FormBodyState extends State<_FormBody> {
         backgroundColor: AppColors.cream,
         appBar: AppBar(
           title: const Text('Ajukan Ubah Data'),
+          actions: [
+            Consumer<ProfileProvider>(
+              builder: (context, provider, _) {
+                final pendingCount = provider.pengajuan.where((p) => p.status == 'pending').length;
+
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.history_rounded, color: Color(0xFF0F172A)),
+                      tooltip: 'Riwayat Pengajuan',
+                      onPressed: () => _openRiwayatSheet(context),
+                    ),
+                    if (pendingCount > 0)
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: const BoxDecoration(
+                            color: AppColors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(minWidth: 8, minHeight: 8),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(width: 6),
+          ],
           bottom: const TabBar(
             indicatorColor: AppColors.red,
             indicatorWeight: 3,
@@ -912,6 +1036,136 @@ class _ShimmerLoading extends StatelessWidget {
                 )),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RiwayatCardTile extends StatelessWidget {
+  final PengajuanPerubahan item;
+  const _RiwayatCardTile({required this.item});
+
+  BadgeTone get _tone {
+    switch (item.status) {
+      case 'disetujui':
+        return BadgeTone.success;
+      case 'ditolak':
+        return BadgeTone.danger;
+      default:
+        return BadgeTone.warning;
+    }
+  }
+
+  String _getFieldLabel(String field) {
+    switch (field) {
+      case 'no_hp':
+        return 'No. HP Utama';
+      case 'email':
+        return 'Email Resmi';
+      case 'email_pribadi':
+        return 'Email Pribadi';
+      case 'alamat':
+        return 'Alamat Lengkap';
+      case 'nama_panggilan':
+        return 'Nama Panggilan';
+      case 'status_marital':
+        return 'Status Pernikahan';
+      case 'golongan_darah':
+        return 'Golongan Darah';
+      case 'agama':
+        return 'Agama';
+      case 'hobi':
+        return 'Hobi';
+      case 'koordinat_domisili':
+        return 'Koordinat Domisili WFH';
+      default:
+        return field.split('_').map((word) {
+          if (word.isEmpty) return '';
+          return word[0].toUpperCase() + word.substring(1);
+        }).join(' ');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dateStr = DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(item.createdAt);
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  _getFieldLabel(item.field),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              StatusBadge(
+                label: item.status[0].toUpperCase() + item.status.substring(1),
+                tone: _tone,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            item.nilaiBaru,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
+            ),
+            softWrap: true,
+          ),
+          if (item.catatanAdmin != null && item.catatanAdmin!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded, size: 14, color: Color(0xFF475569)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Catatan Admin: ${item.catatanAdmin}',
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: const Color(0xFF475569)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Text(
+            dateStr,
+            style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF94A3B8)),
           ),
         ],
       ),

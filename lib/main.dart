@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/auth_provider.dart';
+import 'features/notification/notification_provider.dart';
 import 'features/splash/splash_screen.dart';
 import 'firebase_options.dart';
 
@@ -41,6 +42,7 @@ class _SimpegKpiAppState extends State<SimpegKpiApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()..bootstrap()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()..loadNotifications()),
       ],
       child: MaterialApp(
         title: 'Simpeg KPI',

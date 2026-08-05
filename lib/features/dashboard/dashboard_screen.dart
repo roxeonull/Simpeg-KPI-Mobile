@@ -20,6 +20,8 @@ import '../jadwal_shift/jadwal_shift_screen.dart';
 import '../riwayat/riwayat_screen.dart';
 import '../profile/data_pegawai_screen.dart';
 import '../profile/pengajuan_perubahan_screen.dart';
+import '../notification/notification_provider.dart';
+import '../notification/notification_center_screen.dart';
 import 'dashboard_provider.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -142,6 +144,67 @@ class _DashboardBody extends StatelessWidget {
                             ],
                           ],
                         ),
+                      ),
+                      const SizedBox(width: 10),
+                      Consumer<NotificationProvider>(
+                        builder: (context, notifProvider, _) {
+                          final unread = notifProvider.unreadCount;
+                          return BouncingButton(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const NotificationCenterScreen(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.black.withOpacity(0.06)),
+                              ),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.notifications_none_rounded,
+                                    color: Color(0xFF0F172A),
+                                    size: 22,
+                                  ),
+                                  if (unread > 0)
+                                    Positioned(
+                                      top: 8,
+                                      right: 8,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(3),
+                                        decoration: const BoxDecoration(
+                                          color: AppColors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 16,
+                                          minHeight: 16,
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            unread > 99 ? '99+' : '$unread',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.bold,
+                                              height: 1.0,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

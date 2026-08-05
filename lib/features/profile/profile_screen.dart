@@ -3,16 +3,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/api_exception.dart';
-import '../../core/models/pegawai.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/status_badge.dart';
 import '../auth/auth_provider.dart';
 import '../auth/login_screen.dart';
-import '../riwayat/riwayat_screen.dart';
 import 'profile_provider.dart';
 import 'data_pegawai_screen.dart';
 import 'pengajuan_perubahan_screen.dart';
+import '../notification/widgets/pengaturan_notifikasi_sheet.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -70,53 +68,9 @@ class _ProfileBody extends StatelessWidget {
     );
   }
 
-  void _openAllPengajuanSheet(BuildContext context, List<PengajuanPerubahan> list) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        height: MediaQuery.of(ctx).size.height * 0.7,
-        padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
-        decoration: const BoxDecoration(
-          color: AppColors.cream,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: Column(
-          children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(999))),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Text(
-                  'Riwayat Pengajuan Perubahan Data',
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 15),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 20),
-                  onPressed: () => Navigator.pop(ctx),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: ListView.separated(
-                itemCount: list.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (_, i) => _PengajuanTile(item: list[i]),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final profileProvider = context.watch<ProfileProvider>();
     final pegawai = auth.user?.pegawai;
 
     return Scaffold(
@@ -135,7 +89,7 @@ class _ProfileBody extends StatelessWidget {
                       gradient: const LinearGradient(colors: AppColors.heroGradient),
                       borderRadius: BorderRadius.circular(26),
                       boxShadow: [
-                        BoxShadow(color: AppColors.red.withOpacity(0.28), blurRadius: 22, offset: const Offset(0, 8)),
+                        BoxShadow(color: AppColors.red.withValues(alpha: 0.28), blurRadius: 22, offset: const Offset(0, 8)),
                       ],
                     ),
                     child: ClipRRect(
@@ -187,65 +141,53 @@ class _ProfileBody extends StatelessWidget {
                 _InfoRow(icon: Icons.location_on_outlined, label: 'Alamat', value: pegawai?.alamat ?? '-', isLast: true),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
+
+            // Section 1: Data Kepegawaian
+            const _SectionHeader(title: 'KEPEGAWAIAN'),
+            const SizedBox(height: 8),
             _MenuTile(
               icon: Icons.badge_outlined,
               label: 'Data Pegawai Lengkap',
+              subtitle: 'Profil pribadi, keluarga, & dokumen',
               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DataPegawaiScreen())),
             ),
             const SizedBox(height: 10),
             _MenuTile(
-              icon: Icons.school_outlined,
-              label: 'Riwayat Pendidikan & Diklat',
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RiwayatScreen())),
+              icon: Icons.edit_note_rounded,
+              label: 'Pengajuan Perubahan Data',
+              subtitle: 'Form pembaharuan data & riwayat pengajuan',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PengajuanPerubahanScreen()),
+                ).then((_) {
+                  if (context.mounted) {
+                    context.read<ProfileProvider>().load();
+                  }
+                });
+              },
+            ),
+
+            const SizedBox(height: 22),
+
+            // Section 2: Pengaturan Aplikasi & Keamanan
+            const _SectionHeader(title: 'PENGATURAN APLIKASI'),
+            const SizedBox(height: 8),
+            _MenuTile(
+              icon: Icons.notifications_active_outlined,
+              label: 'Pengaturan Notifikasi Presensi',
+              subtitle: 'Atur pengingat shift & absen otomatis',
+              onTap: () => PengaturanNotifikasiSheet.show(context),
             ),
             const SizedBox(height: 10),
             _MenuTile(
               icon: Icons.lock_outline_rounded,
               label: 'Ubah Password Akun',
+              subtitle: 'Ganti kata sandi akun SIMPEG-KPI',
               onTap: () => _openChangePasswordSheet(context),
             ),
-            const SizedBox(height: 10),
-            _MenuTile(
-              icon: Icons.edit_note_rounded,
-              label: 'Ajukan Perubahan Data',
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const PengajuanPerubahanScreen()),
-                ).then((_) {
-                  context.read<ProfileProvider>().load();
-                });
-              },
-            ),
-            const SizedBox(height: 22),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Riwayat Pengajuan Perubahan',
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14.5, color: AppColors.black),
-                ),
-                if (profileProvider.pengajuan.length > 3)
-                  GestureDetector(
-                    onTap: () => _openAllPengajuanSheet(context, profileProvider.pengajuan),
-                    child: Text(
-                      'Lihat Semua (${profileProvider.pengajuan.length})',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.red),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (profileProvider.isLoading)
-              const SizedBox(height: 60, child: Center(child: CircularProgressIndicator(color: AppColors.red, strokeWidth: 2)))
-            else if (profileProvider.pengajuan.isEmpty)
-              const EmptyState(icon: Icons.fact_check_outlined, title: 'Belum ada riwayat pengajuan perubahan data')
-            else
-              ...profileProvider.pengajuan.take(3).map((p) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _PengajuanTile(item: p),
-                  )),
-            const SizedBox(height: 26),
+
+            const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -266,6 +208,27 @@ class _ProfileBody extends StatelessWidget {
   }
 }
 
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 4),
+      child: Text(
+        title,
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w800,
+          color: const Color(0xFF64748B),
+          letterSpacing: 0.8,
+        ),
+      ),
+    );
+  }
+}
+
 class _SectionCard extends StatelessWidget {
   final List<Widget> children;
   const _SectionCard({required this.children});
@@ -279,7 +242,7 @@ class _SectionCard extends StatelessWidget {
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -325,8 +288,9 @@ class _InfoRow extends StatelessWidget {
 class _MenuTile extends StatelessWidget {
   final IconData icon;
   final String label;
+  final String? subtitle;
   final VoidCallback onTap;
-  const _MenuTile({required this.icon, required this.label, required this.onTap});
+  const _MenuTile({required this.icon, required this.label, this.subtitle, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -337,13 +301,13 @@ class _MenuTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.02),
+                color: Colors.black.withValues(alpha: 0.02),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -354,94 +318,31 @@ class _MenuTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(color: AppColors.redSoft, borderRadius: BorderRadius.circular(11)),
-                child: Icon(icon, size: 18, color: AppColors.red),
+                child: Icon(icon, size: 19, color: AppColors.red),
               ),
               const SizedBox(width: 14),
               Expanded(
-                child: Text(
-                  label,
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13.5, color: AppColors.black),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13.5, color: AppColors.black),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle!,
+                        style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: const Color(0xFF64748B), fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.grayLight),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.grayLight, size: 20),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _PengajuanTile extends StatelessWidget {
-  final PengajuanPerubahan item;
-  const _PengajuanTile({required this.item});
-
-  BadgeTone get _tone {
-    switch (item.status) {
-      case 'disetujui':
-        return BadgeTone.success;
-      case 'ditolak':
-        return BadgeTone.danger;
-      default:
-        return BadgeTone.warning;
-    }
-  }
-
-  String _getFieldLabel(String field) {
-    switch (field) {
-      case 'no_hp':
-        return 'No. HP Utama';
-      case 'email':
-        return 'Email Resmi';
-      case 'email_pribadi':
-        return 'Email Pribadi';
-      case 'alamat':
-        return 'Alamat Lengkap';
-      case 'nama_panggilan':
-        return 'Nama Panggilan';
-      case 'status_marital':
-        return 'Status Pernikahan';
-      case 'golongan_darah':
-        return 'Golongan Darah';
-      case 'agama':
-        return 'Agama';
-      case 'hobi':
-        return 'Hobi';
-      case 'koordinat_domisili':
-        return 'Koordinat Titik Domisili WFH';
-      default:
-        return field.split('_').map((word) {
-          if (word.isEmpty) return '';
-          return word[0].toUpperCase() + word.substring(1);
-        }).join(' ');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _getFieldLabel(item.field),
-                  style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: AppColors.grayLight, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  item.nilaiBaru,
-                  style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w700, color: AppColors.black),
-                ),
-              ],
-            ),
-          ),
-          StatusBadge(label: item.status[0].toUpperCase() + item.status.substring(1), tone: _tone),
-        ],
       ),
     );
   }

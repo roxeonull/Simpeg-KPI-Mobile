@@ -8,6 +8,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/models/absensi.dart';
 import '../../core/models/jadwal_shift.dart';
+import '../../core/services/shift_reminder_service.dart';
 
 class AbsensiProvider extends ChangeNotifier {
   final ApiClient _api = ApiClient.instance;
@@ -95,11 +96,27 @@ class AbsensiProvider extends ChangeNotifier {
       } catch (_) {
         shiftHariIni = null;
       }
+
+      _syncShiftReminder();
     } catch (_) {
       error = 'Gagal memuat status presensi hari ini.';
     }
     isLoadingToday = false;
     notifyListeners();
+  }
+
+  void _syncShiftReminder() {
+    final jamMasuk = shiftHariIni?.jamMulai ?? jamMasukKantor;
+    final jamKeluar = shiftHariIni?.jamSelesai ?? jamPulangKantor;
+    final shiftName = shiftHariIni?.statusShift?.nama ?? shiftHariIni?.shiftLabel;
+
+    ShiftReminderService.instance.syncShiftReminders(
+      jamMasuk: jamMasuk,
+      jamKeluar: jamKeluar,
+      hasAbsenMasuk: today?.jamMasuk != null,
+      hasAbsenKeluar: today?.jamKeluar != null,
+      shiftName: shiftName,
+    );
   }
 
   Future<void> loadHistory({String? bulan}) async {
