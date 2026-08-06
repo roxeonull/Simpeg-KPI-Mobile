@@ -125,8 +125,9 @@ class _DinasLuarFormScreenState extends State<DinasLuarFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Pengajuan Dinas Luar / WFA berhasil dikirim!', style: GoogleFonts.plusJakartaSans()),
-            backgroundColor: const Color(0xFF10B981),
+            backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
         Navigator.pop(context);
@@ -138,6 +139,7 @@ class _DinasLuarFormScreenState extends State<DinasLuarFormScreen> {
             content: Text(e.friendlyMessage, style: GoogleFonts.plusJakartaSans()),
             backgroundColor: AppColors.danger,
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -148,6 +150,7 @@ class _DinasLuarFormScreenState extends State<DinasLuarFormScreen> {
             content: Text('Terjadi kesalahan: $e', style: GoogleFonts.plusJakartaSans()),
             backgroundColor: AppColors.danger,
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }

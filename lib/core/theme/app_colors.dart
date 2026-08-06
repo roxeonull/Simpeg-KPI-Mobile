@@ -40,8 +40,8 @@ class AppColors {
   static const Color amberAccent = Color(0xFFF59E0B);
   static const Color amberSoft = Color(0xFFFFFBEB);
 
-  static const Color crimsonAccent = Color(0xFFE11D48);
-  static const Color crimsonSoft = Color(0xFFFFF1F2);
+  static const Color crimsonAccent = red;
+  static const Color crimsonSoft = redSoft;
 
   // Gradients
   static const List<Color> heroGradient = [red, redDark];

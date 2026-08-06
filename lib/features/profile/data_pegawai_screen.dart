@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/fade_slide_in.dart';
 import '../../core/widgets/shimmer_box.dart';
 import '../../core/widgets/status_badge.dart';
@@ -92,7 +93,14 @@ class _DataPegawaiBodyState extends State<_DataPegawaiBody> {
         ),
         body: provider.isLoadingDetail
             ? const _ShimmerLoading()
-            : TabBarView(
+            : d == null
+                ? EmptyState(
+                    icon: Icons.cloud_off_rounded,
+                    title: 'Gagal memuat data pegawai',
+                    subtitle: 'Terjadi kesalahan koneksi saat mengambil data.',
+                    onRetry: () => provider.loadDetailPegawai(),
+                  )
+                : TabBarView(
                 children: [
                   // Tab 1: Personal
                   RefreshIndicator(

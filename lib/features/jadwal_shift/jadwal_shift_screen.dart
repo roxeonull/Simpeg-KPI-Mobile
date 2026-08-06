@@ -145,7 +145,14 @@ class _JadwalShiftBodyState extends State<_JadwalShiftBody> {
               child: provider.isLoading
                   ? const _ShiftSkeleton()
                   : provider.error != null
-                      ? EmptyState(icon: Icons.cloud_off_rounded, title: provider.error!)
+                      ? EmptyState(
+                          icon: Icons.cloud_off_rounded,
+                          title: provider.error!,
+                          onRetry: () {
+                            final bulanStr = '${_currentMonth.year}-${_currentMonth.month.toString().padLeft(2, '0')}';
+                            context.read<JadwalShiftProvider>().loadMonthly(bulanStr);
+                          },
+                        )
                       : provider.entries.isEmpty
                           ? const EmptyState(
                               icon: Icons.event_busy_rounded,

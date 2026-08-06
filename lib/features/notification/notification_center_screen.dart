@@ -411,7 +411,7 @@ class _NotificationCard extends StatelessWidget {
       case 'pelatihan':
         return const Color(0xFFF3E8FF);
       case 'pengumuman':
-        return const Color(0xFFFEF2F2);
+        return AppColors.redSoft;
       default:
         return const Color(0xFFF1F5F9);
     }

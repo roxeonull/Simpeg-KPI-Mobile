@@ -13,7 +13,8 @@ import 'riwayat_provider.dart';
 import 'pelatihan_form_screen.dart';
 
 class RiwayatScreen extends StatefulWidget {
-  const RiwayatScreen({super.key});
+  final int initialTab;
+  const RiwayatScreen({super.key, this.initialTab = 0});
 
   @override
   State<RiwayatScreen> createState() => _RiwayatScreenState();
@@ -25,7 +26,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialTab.clamp(0, 1));
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         setState(() {});

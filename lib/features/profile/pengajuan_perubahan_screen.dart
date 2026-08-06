@@ -487,7 +487,7 @@ class _FormBodyState extends State<_FormBody> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: const BoxDecoration(
-                          color: Color(0xFFFEF2F2),
+                          color: AppColors.redSoft,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.history_rounded, color: AppColors.red, size: 20),

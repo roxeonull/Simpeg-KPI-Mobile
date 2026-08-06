@@ -6,7 +6,6 @@ import '../../core/models/cuti.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/status_badge.dart';
-import '../auth/auth_provider.dart';
 import 'cuti_provider.dart';
 import 'widgets/atasan_approval_dialogs.dart';
 import 'widgets/cuti_status_helper.dart';

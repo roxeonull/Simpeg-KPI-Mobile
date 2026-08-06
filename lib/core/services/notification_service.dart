@@ -8,18 +8,21 @@ import 'package:provider/provider.dart';
 import '../api/api_client.dart';
 import '../api/token_storage.dart';
 import '../models/notification_item.dart';
+import '../theme/app_colors.dart';
 import 'notification_storage.dart';
 import '../../features/auth/auth_provider.dart';
 import '../../features/cuti/cuti_detail_screen.dart';
 import '../../features/cuti/cuti_list_screen.dart';
 import '../../features/cuti/cuti_provider.dart';
 import '../../features/notification/notification_provider.dart';
+import '../../features/profile/pengajuan_perubahan_screen.dart';
+import '../../features/riwayat/riwayat_screen.dart';
 
 /// Top-level background message handler for FCM
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  debugPrint("Handling background FCM message: ${message.messageId}");
+  debugPrint("[FCM Background] Message ID: ${message.messageId}, Data: ${message.data}");
 }
 
 class NotificationService {
@@ -31,6 +34,7 @@ class NotificationService {
 
   bool _initialized = false;
   GlobalKey<NavigatorState>? navigatorKey;
+  Map<String, dynamic>? pendingPayload;
 
   /// Initialize FCM listeners and permissions
   Future<void> initialize({GlobalKey<NavigatorState>? navKey}) async {
@@ -47,7 +51,7 @@ class NotificationService {
       sound: true,
     );
 
-    debugPrint("User notification permission status: ${settings.authorizationStatus}");
+    debugPrint("[FCM] User notification permission status: ${settings.authorizationStatus}");
 
     // 2. Register background handler
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -59,25 +63,35 @@ class NotificationService {
 
     // 4. Handle Foreground Messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint("Foreground FCM message received: ${message.notification?.title}");
+      debugPrint("[FCM Foreground] Title: ${message.notification?.title}, Data: ${message.data}");
       _saveAndDispatchNotification(message);
       _showInAppBanner(message);
     });
 
-    // 5. Handle Background App Opened (when user taps notification)
+    // 5. Handle Background App Opened (when user taps notification while running in background)
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      debugPrint("Notification clicked while app in background: ${message.data}");
+      debugPrint("[FCM Background Opened] Clicked message data: ${message.data}");
       _saveAndDispatchNotification(message, markRead: true);
       _handlePayloadNavigation(message.data);
     });
 
-    // 6. Handle Terminated App Opened
+    // 6. Handle Terminated App Opened (when user taps notification while app was fully terminated)
     RemoteMessage? initialMessage = await _fcm.getInitialMessage();
     if (initialMessage != null) {
-      debugPrint("App launched from terminated notification click: ${initialMessage.data}");
+      debugPrint("[FCM Terminated Opened] Initial message data: ${initialMessage.data}");
       _saveAndDispatchNotification(initialMessage, markRead: true);
-      Future.delayed(const Duration(milliseconds: 600), () {
-        _handlePayloadNavigation(initialMessage.data);
+      pendingPayload = initialMessage.data;
+    }
+  }
+
+  /// Check and trigger navigation for pending notification payload received when launched from terminated state
+  void checkAndHandlePendingNotification() {
+    if (pendingPayload != null && pendingPayload!.isNotEmpty) {
+      final data = Map<String, dynamic>.from(pendingPayload!);
+      pendingPayload = null;
+      debugPrint("[FCM Terminated] Executing pending payload navigation: $data");
+      Future.delayed(const Duration(milliseconds: 400), () {
+        _handlePayloadNavigation(data);
       });
     }
   }
@@ -159,28 +173,56 @@ class NotificationService {
     final context = navigatorKey?.currentContext;
     if (context == null) return;
 
-    final title = message.notification?.title ?? 'Notifikasi';
-    final body = message.notification?.body ?? '';
+    final title = message.notification?.title ?? message.data['title']?.toString() ?? 'Notifikasi';
+    final body = message.notification?.body ?? message.data['body']?.toString() ?? '';
 
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        content: Row(
           children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-            if (body.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Text(body, style: const TextStyle(fontSize: 12, color: Colors.white70)),
-            ],
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppColors.red.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.notifications_active_rounded, color: AppColors.redSoft, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13.5),
+                  ),
+                  if (body.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      body,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12, color: Colors.white70),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
-        backgroundColor: const Color(0xFF1C1712),
-        duration: const Duration(seconds: 4),
+        backgroundColor: AppColors.black,
+        duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         action: SnackBarAction(
           label: 'Buka',
-          textColor: const Color(0xFFC1272D),
+          textColor: AppColors.gold,
           onPressed: () => _handlePayloadNavigation(message.data),
         ),
       ),
@@ -190,14 +232,17 @@ class NotificationService {
   /// Handle navigation based on payload (type & id)
   void _handlePayloadNavigation(Map<String, dynamic> data) {
     final context = navigatorKey?.currentContext;
-    if (context == null || data.isEmpty) return;
+    if (context == null || data.isEmpty) {
+      debugPrint("[NotificationService] Cannot navigate: context is null or data is empty.");
+      return;
+    }
 
     final String? type = data['type']?.toString();
     final String? idStr = data['id']?.toString();
 
-    if (type == null) return;
+    debugPrint("[NotificationService] Processing payload navigation. type: '$type', id: '$idStr', rawData: $data");
 
-    debugPrint("Navigating for payload type: $type, id: $idStr");
+    if (type == null) return;
 
     final isAtasan = context.read<AuthProvider>().isAtasan;
 
@@ -205,38 +250,50 @@ class NotificationService {
       case 'cuti':
         if (idStr != null && int.tryParse(idStr) != null) {
           final cutiId = int.parse(idStr);
-          if (isAtasan) {
-            // For atasan, open CutiListScreen tab 0 (Perlu Persetujuan) or open detail directly with CutiProvider
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => ChangeNotifierProvider(
-                  create: (_) => CutiProvider()..loadAll(isAtasan: true),
-                  child: CutiDetailScreen(cutiId: cutiId),
-                ),
-              ),
-            );
-          } else {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => ChangeNotifierProvider(
-                  create: (_) => CutiProvider()..loadAll(isAtasan: false),
-                  child: CutiDetailScreen(cutiId: cutiId),
-                ),
-              ),
-            );
-          }
-        } else if (isAtasan) {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => const CutiListScreen(initialTab: 0),
+              builder: (_) => ChangeNotifierProvider(
+                create: (_) => CutiProvider()..loadAll(isAtasan: isAtasan),
+                child: CutiDetailScreen(cutiId: cutiId),
+              ),
+            ),
+          );
+        } else {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => CutiListScreen(initialTab: isAtasan ? 0 : 0),
             ),
           );
         }
         break;
+
+      case 'cuti_tim':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => CutiListScreen(initialTab: isAtasan ? 0 : 1),
+          ),
+        );
+        break;
+
       case 'pelatihan':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const RiwayatScreen(initialTab: 1),
+          ),
+        );
+        break;
+
       case 'perubahan_data':
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const PengajuanPerubahanScreen(),
+          ),
+        );
+        break;
+      default:
+        debugPrint("[NotificationService] Unknown or unhandled payload type: '$type'");
         break;
     }
   }
 }
+

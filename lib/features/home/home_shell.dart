@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/services/mock_location_guard_service.dart';
+import '../../core/services/notification_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/bouncing_button.dart';
 import '../absensi/absensi_screen.dart';
@@ -29,6 +30,9 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _checkMockLocation();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService.instance.checkAndHandlePendingNotification();
+    });
   }
 
   @override

@@ -131,15 +131,21 @@ class _DinasLuarListScreenState extends State<DinasLuarListScreen> with SingleTi
       ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.red))
-          : isAtasan
-              ? TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _MyRequestsList(items: provider.myRequests),
-                    _TeamRequestsList(items: provider.teamRequests),
-                  ],
+          : provider.error != null
+              ? EmptyState(
+                  icon: Icons.cloud_off_rounded,
+                  title: provider.error!,
+                  onRetry: () => context.read<DinasLuarProvider>().loadAll(isAtasan: isAtasan),
                 )
-              : _MyRequestsList(items: provider.myRequests),
+              : isAtasan
+                  ? TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _MyRequestsList(items: provider.myRequests),
+                        _TeamRequestsList(items: provider.teamRequests),
+                      ],
+                    )
+                  : _MyRequestsList(items: provider.myRequests),
     );
   }
 }

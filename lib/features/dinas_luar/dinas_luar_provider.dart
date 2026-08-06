@@ -31,6 +31,7 @@ class DinasLuarProvider extends ChangeNotifier {
       ]);
     } catch (e) {
       debugPrint("Error loading dinas luar data: $e");
+      error = e is ApiException ? e.friendlyMessage : 'Gagal memuat data dinas luar';
     } finally {
       isLoading = false;
       notifyListeners();

@@ -114,7 +114,7 @@ class _PengaturanNotifikasiSheetState extends State<PengaturanNotifikasiSheet> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: const BoxDecoration(
-                  color: Color(0xFFFEF2F2),
+                  color: AppColors.redSoft,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.alarm_rounded, color: AppColors.red, size: 22),

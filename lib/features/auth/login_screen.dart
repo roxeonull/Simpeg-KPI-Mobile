@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/api/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../home/home_shell.dart';
 import 'auth_provider.dart';
